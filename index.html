@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.4.0">
+<meta name="app-version" content="2.5.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -158,12 +158,16 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .grid.g6{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr)}
 .grid.g4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
 .grid.g3{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
-.grid.g3>.cell:first-child{grid-column:1 / 3}
+.grid.g3>:first-child{grid-column:1 / 3}
 .grid.g2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
 .grid.g1{grid-template-columns:1fr;grid-template-rows:1fr}
 .cell{position:relative;overflow:hidden;background:#000;min-height:0}
 .cell>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cell .cap{position:absolute;left:8px;bottom:8px;padding:3px 8px;background:rgba(12,13,15,.85);color:#ECEAE4;font-family:var(--fm);font-size:12px}
+.cell.contain{background:transparent}
+.cw{display:flex;flex-direction:column;gap:6px;min-height:0;min-width:0}
+.cw>.cell{flex:1}
+.capb{font-family:var(--fm);font-size:12px;color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
 .qr{display:flex;gap:12px;align-items:center;padding:12px;background:var(--panel)}
 .qr .code{width:64px;height:64px;flex-shrink:0;background:#fff;padding:4px;display:flex;align-items:center;justify-content:center}
 .qr .code svg{width:100%;height:100%}
@@ -275,7 +279,7 @@ const FIELDS = {category:{en:'TYPE', ja:'制作区分', ui:'制作区分'}, tool
 const LEFT_PARTS = {desc:'説明文', meta:'作品情報（TYPE・TOOLSなど）', video:'動画リンク・QR'};
 const DATE_FORMATS = {jp:'2025年7月', dot:'2025.07', slash:'2025/07', en:'JUL 2025'};
 const SEPS = {' / ':'Blender / Maya', '、':'Blender、Maya', ' · ':'Blender · Maya', ', ':'Blender, Maya'};
-function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
+function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, capStyle:'below', software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
 function defaultInfo(){ return {kind:'ANIMATION', length:0, category:'', categoryNote:'', team:'', teamSize:0, tools:[], date:{y:null, m:null, range:false, y2:null, m2:null}, roles:[], roleNote:'', poly:{count:0, unit:'tris', subd:0, count2:0}, tex:{res:0, sets:1, maps:[]}, extra:[]}; }
 const ST = () => P.settings;
 function toHalf(s){ return String(s ?? '').replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
@@ -752,8 +756,11 @@ function renderDetail(pg, M){
   const L = LAYOUTS[d.layout] || LAYOUTS.g6; const cells = [];
   for (let k = 0; k < L.n; k++){
     const c = d.cells[k] || {img:'', cap:''}; const cp = `${p}.cells.${k}.img`;
-    cells.push(c.img && IM[c.img] ? `<div class="cell"><img src="${src(c.img)}" alt="" draggable="false" data-drop="${cp}">${c.cap ? `<span class="cap">${rich(c.cap)}</span>` : ''}</div>`
-      : `<div class="cell" style="background:none">${slot('', cp, c.cap || '画像', 'ここに画像をドロップ')}</div>`);
+    const mode = ST().capStyle, fit = c.fit === 'contain' ? 'contain' : 'cover';
+    const inner = c.img && IM[c.img]
+      ? `<div class="cell ${fit === 'contain' ? 'contain' : ''}"><img src="${src(c.img)}" alt="" draggable="false" data-drop="${cp}" style="object-fit:${fit}">${mode === 'overlay' && c.cap ? `<span class="cap">${rich(c.cap)}</span>` : ''}</div>`
+      : `<div class="cell" style="background:none">${slot('', cp, c.cap || '画像', 'ここに画像をドロップ')}</div>`;
+    cells.push(mode === 'below' ? `<div class="cw">${inner}<span class="capb">${c.cap && c.img && IM[c.img] ? rich(c.cap) : '&nbsp;'}</span></div>` : inner);
   }
   const parts = {
     desc:() => w.desc ? `<p class="desc">${richBr(w.desc)}</p>` : '',
@@ -1215,7 +1222,7 @@ function workEditor(w, bi, no){
         <div class="row" style="margin-bottom:8px"><label class="f grow" style="margin:0"><span>レイアウト</span><select data-path="${p}.details.${di}.layout" data-struct>${Object.entries(LAYOUTS).map(([k, l]) => `<option value="${k}" ${d.layout === k ? 'selected' : ''}>${l.label}</option>`).join('')}</select></label>
         <label class="f grow" style="margin:0"><span>右上の見出し</span><input type="text" data-path="${p}.details.${di}.label" value="${esc(d.label || 'BREAKDOWN')}"></label></div>
         ${di > 0 ? fld(`${p}.details.${di}.note`, '左側のメモ（空なら画像が全幅）', {rows:2}) : ''}
-        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"></div>`; }).join('')}</div></div>`).join('')}
+        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"><div class="row" style="gap:4px">${[['cover', '枠いっぱい'], ['contain', '全体を表示']].map(([v, l]) => `<button class="chip ${(c.fit || 'cover') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.fit" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div></div>`; }).join('')}</div></div>`).join('')}
       <button class="b sm" data-act="dAdd">＋ 詳細ページを追加</button></div>
     <div class="sec row wrap"><button class="b sm" data-act="dupBlock">この作品を複製</button><button class="b sm danger" data-act="delBlock">この作品を削除</button></div>`;
 }
@@ -1264,7 +1271,8 @@ function panelFormat(){
       <div class="g2"><label class="f"><span>日付の書き方</span><select data-path="settings.dateFormat" data-struct>${Object.entries(DATE_FORMATS).map(([k, l]) => `<option value="${k}" ${S.dateFormat === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <label class="f"><span>ツールの区切り</span><select data-path="settings.toolSep" data-struct>${Object.entries(SEPS).map(([k, l]) => `<option value="${esc(k)}" ${S.toolSep === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div>
       <label class="row" style="gap:8px;margin-bottom:6px"><input type="checkbox" data-path="settings.halfWidth" data-bool ${S.halfWidth ? 'checked' : ''}> 全角の英数字を自動で半角にする（全ページ）</label>
-      <label class="row" style="gap:8px;margin-bottom:10px"><input type="checkbox" data-path="settings.heroAutoTags" data-bool ${S.heroAutoTags ? 'checked' : ''}> 扉ページのタグを自動で作る</label></div>
+      <label class="row" style="gap:8px;margin-bottom:10px"><input type="checkbox" data-path="settings.heroAutoTags" data-bool ${S.heroAutoTags ? 'checked' : ''}> 扉ページのタグを自動で作る</label>
+      <div class="row" style="margin-bottom:10px;flex-wrap:wrap"><span class="mini" style="margin:0 6px 0 0">画像のキャプション</span>${[['below', '画像の下'], ['overlay', '画像に重ねる'], ['none', '表示しない']].map(([k, l]) => `<button class="chip ${S.capStyle === k ? 'on' : ''}" data-setv="settings.capStyle" data-val="${k}">${l}</button>`).join('')}</div></div>
     <div class="sec"><h3>ツールの一覧（この順で表示されます）</h3>${olist('settings.software', S.software, k => k, {del:true})}<button class="b sm" data-addlist="settings.software">＋ ツールを追加</button></div>
     <div class="sec"><h3>担当範囲の一覧（この順で表示されます）</h3>${olist('settings.roleList', S.roleList, k => k, {del:true})}<button class="b sm" data-addlist="settings.roleList">＋ 項目を追加</button></div>`;
 }
