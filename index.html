@@ -1,0 +1,1477 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="app-version" content="2.3.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0C0D0F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Portfolio Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Oswald:wght@400;700&family=Inter:wght@400;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+:root{--ui-bg:#17181B;--ui-panel:#1F2024;--ui-line:#2E3036;--ui-ink:#E8E6E1;--ui-muted:#9A9CA3;--ui-acc:#FF5A36;--sel:#3D8BFF}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#0A0A0B;color:var(--ui-ink);font-family:'Noto Sans JP',system-ui,sans-serif;font-size:13px;overflow:hidden}
+#app{display:flex;height:100vh}
+aside{background:var(--ui-bg);display:flex;flex-direction:column;min-height:0;flex-shrink:0}
+#side{width:340px;border-right:1px solid var(--ui-line)}
+#insp{width:290px;border-left:1px solid var(--ui-line)}
+#side header{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#side header h1{margin:0;font-family:'Archivo',sans-serif;font-stretch:125%;font-weight:900;font-size:15px;letter-spacing:.02em}
+#side header h1 span{color:var(--ui-acc)}
+#status{font-size:11px;color:var(--ui-muted);text-align:right}
+.tabs{display:flex;gap:2px;padding:10px 10px 0;border-bottom:1px solid var(--ui-line)}
+.tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--ui-muted);padding:8px 2px;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ui-ink);border-bottom-color:var(--ui-acc)}
+.scroll{flex:1;overflow:auto;padding:14px 14px 40px}
+.sec{margin-bottom:18px}
+.sec h3{margin:0 0 8px;font-size:11px;letter-spacing:.12em;color:var(--ui-muted);font-family:'JetBrains Mono',monospace;font-weight:500;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+label.f{display:block;margin-bottom:10px}
+label.f>span{display:block;font-size:11px;color:var(--ui-muted);margin-bottom:4px}
+input[type=text],input[type=url],input[type=number],textarea,select{width:100%;background:var(--ui-panel);border:1px solid var(--ui-line);color:var(--ui-ink);border-radius:6px;padding:6px 8px;font:inherit}
+input[type=number]{padding:5px 6px}
+textarea{resize:vertical;min-height:54px;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--ui-acc);outline-offset:-1px;border-color:transparent}
+button.b{background:var(--ui-panel);border:1px solid var(--ui-line);color:var(--ui-ink);border-radius:6px;padding:6px 10px;font:inherit;cursor:pointer;min-height:30px;white-space:nowrap}
+button.b:hover{border-color:var(--ui-muted)}
+button.b.pri{background:var(--ui-acc);border-color:var(--ui-acc);color:#140904;font-weight:700}
+button.b.sm{padding:3px 8px;min-height:26px;font-size:12px}
+button.b.danger:hover{border-color:#e5484d;color:#ff8b8e}
+button.b:disabled{opacity:.4;cursor:default}
+button.b.on{border-color:var(--ui-acc);color:var(--ui-acc)}
+.row{display:flex;gap:6px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.hint{font-size:11px;color:var(--ui-muted);line-height:1.6;margin:4px 0 10px}
+.mini{font-size:10px;color:var(--ui-muted);display:block;margin-bottom:2px}
+/* block list */
+.blist{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.bitem{display:flex;align-items:center;gap:7px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:8px;padding:5px 7px;cursor:pointer}
+.bitem.sel{border-color:var(--ui-acc)}
+.bitem.off{opacity:.45}
+.bitem.dragover{outline:2px dashed var(--ui-acc)}
+.bitem .grip{cursor:grab;color:var(--ui-muted);user-select:none}
+.bitem .no{font-family:'Archivo',sans-serif;font-stretch:125%;font-weight:900;color:var(--ui-acc);width:24px;font-size:12px}
+.bitem .kind{font-size:10px;color:var(--ui-muted);width:24px}
+.bitem img,.bitem .noimg{width:48px;height:27px;object-fit:cover;border-radius:3px;background:#000;flex-shrink:0}
+.bitem .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.ib{background:none;border:0;color:var(--ui-muted);cursor:pointer;padding:4px 4px;border-radius:4px;font-size:12px;line-height:1}
+.ib:hover{color:var(--ui-ink);background:#ffffff14}
+.card{background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:8px;padding:10px;margin-bottom:10px}
+.card h4{margin:0 0 8px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.cells{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cellEd{display:flex;flex-direction:column;gap:4px}
+.drop{position:relative;aspect-ratio:16/9;background:#0E0F11;border:1px dashed var(--ui-line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--ui-muted);font-size:11px;cursor:pointer;overflow:hidden;text-align:center;padding:4px}
+.drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.drop.over{border-color:var(--ui-acc);color:var(--ui-ink)}
+.drop .x{position:absolute;top:3px;right:3px;background:#000c;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:11px;padding:2px 5px;z-index:2}
+.metaRow{display:flex;gap:4px;margin-bottom:4px}
+.metaRow input:first-child{width:90px;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:12px}
+.swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.swatches label{display:flex;align-items:center;gap:8px;font-size:12px}
+input[type=color]{width:32px;height:28px;border:1px solid var(--ui-line);border-radius:6px;background:none;padding:2px;cursor:pointer;flex-shrink:0}
+input[type=range]{width:100%;accent-color:var(--ui-acc)}
+.lib{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.lib .li{position:relative;aspect-ratio:16/9;background:#000;border-radius:4px;overflow:hidden;cursor:grab;border:1px solid var(--ui-line)}
+.lib .li img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.lib .li .u{position:absolute;left:3px;bottom:3px;font-size:9px;background:#000b;padding:1px 4px;border-radius:3px;color:#ccc}
+.lib .li .x{position:absolute;top:2px;right:2px;display:none;background:#000c;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:10px;padding:1px 4px}
+.lib .li:hover .x{display:block}
+.issue{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:6px;cursor:pointer;line-height:1.5}
+.issue:hover{background:#ffffff0d}
+.issue .tag{font-size:10px;padding:1px 6px;border-radius:4px;background:#ff5a3622;color:var(--ui-acc);white-space:nowrap;margin-top:2px}
+.issue.ok .tag{background:#3dd68c22;color:#3dd68c}
+kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:4px;padding:0 5px}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:12px;color:var(--ui-muted)}
+/* stage */
+#stage{flex:1;overflow:auto;min-width:0;position:relative}
+#toolbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0A0A0BEE;border-bottom:1px solid var(--ui-line);backdrop-filter:blur(6px);flex-wrap:wrap}
+#toolbar .sp{flex:1}
+#toolbar .grp{display:flex;gap:4px;align-items:center;padding-right:8px;border-right:1px solid var(--ui-line)}
+#todo{font-size:12px;color:var(--ui-muted);cursor:pointer}
+#todo b{color:var(--ui-acc)}
+#pages{display:flex;flex-direction:column;align-items:center;gap:30px;padding:30px 20px 120px}
+.pbox{position:relative;flex-shrink:0;box-shadow:0 8px 30px #0008}
+.pbox .plabel{position:absolute;top:-21px;left:0;font-size:11px;color:var(--ui-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.pbox.act .plabel{color:var(--ui-acc)}
+.pbox.selb{outline:2px solid var(--ui-acc);outline-offset:4px}
+.pscale{transform-origin:0 0;position:relative;width:1123px;height:794px}
+.sellayer{position:absolute;inset:0;pointer-events:none;z-index:50}
+.sbox{position:absolute;border:1.5px solid var(--sel);pointer-events:none}
+.sbox.multi{border-style:dashed}
+.hd{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid var(--sel);border-radius:2px;pointer-events:auto;transform:translate(-50%,-50%)}
+.guide{position:absolute;background:#FF3DCB;pointer-events:none}
+.dropmark{outline:3px solid var(--sel)!important;outline-offset:-3px}
+/* ===== portfolio page styles ===== */
+.page{width:1123px;height:794px;position:relative;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--fb);display:flex;flex-direction:column}
+.page *{box-sizing:border-box}
+.page .exp{font-family:var(--fh);font-stretch:var(--stretch)}
+.page .mono{font-family:var(--fm)}
+.page .ph{color:var(--acc)}
+.page .muted{color:var(--muted)}
+.page img{display:block}
+.layer{position:absolute;inset:0;pointer-events:none;z-index:10}
+.free .layer{pointer-events:auto}
+.el{position:absolute;pointer-events:auto;cursor:move;transform-origin:50% 50%}
+.el.locked{cursor:default}
+.el-text{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.el-text[contenteditable]{cursor:text;outline:1.5px dashed var(--sel);outline-offset:2px}
+.el-image img{width:100%;height:100%;display:block}
+.el .empty{width:100%;height:100%}
+.el-line>i{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:block}
+.pad{padding:44px 48px;justify-content:space-between}
+.foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--fm);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.hdr{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.meta>div{display:flex;flex-direction:column;gap:3px;padding:9px 0;border-top:1px solid var(--line)}
+.meta .k{font-family:var(--fm);font-size:12px;color:var(--muted);letter-spacing:.08em}
+.meta .v{font-size:14px;line-height:1.55}
+.desc{margin:0;font-size:14px;line-height:1.75;text-wrap:pretty}
+.fill{width:100%;height:100%;object-fit:cover;background:#000}
+.empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--panel);border:1px dashed var(--acc);text-align:center;padding:12px;font-family:var(--fb)}
+.empty b{color:var(--acc);font-size:15px}
+.empty span{color:var(--muted);font-size:12px}
+.hero-img{width:1123px;height:632px;flex-shrink:0;position:relative;background:#000}
+.hero-band{height:162px;padding:0 48px;display:flex;align-items:center;gap:32px;border-top:2px solid var(--acc)}
+.hero-no{font-family:var(--fh);font-stretch:var(--stretch);font-weight:900;font-size:96px;line-height:1;color:var(--acc)}
+.hero-t{margin:0;line-height:1.05}
+.hero-t.lat{font-family:var(--fh);font-stretch:var(--stretch);font-weight:800;font-size:46px;letter-spacing:-.01em;text-transform:uppercase}
+.hero-t.jp{font-family:var(--fb);font-weight:900;font-size:40px;letter-spacing:.02em}
+.hero-tags{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:var(--fm);font-size:12px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.dbody{display:flex;gap:40px;align-items:flex-start}
+.dleft{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+.grid{flex:1;min-width:0;display:grid;gap:12px;height:594px}
+.grid.g6{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr)}
+.grid.g4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.grid.g3{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.grid.g3>.cell:first-child{grid-column:1 / 3}
+.grid.g2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+.grid.g1{grid-template-columns:1fr;grid-template-rows:1fr}
+.cell{position:relative;overflow:hidden;background:#000;min-height:0}
+.cell>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cell .cap{position:absolute;left:8px;bottom:8px;padding:3px 8px;background:rgba(12,13,15,.85);color:#ECEAE4;font-family:var(--fm);font-size:12px}
+.qr{display:flex;gap:12px;align-items:center;padding:12px;background:var(--panel)}
+.qr .code{width:64px;height:64px;flex-shrink:0;background:#fff;padding:4px;display:flex;align-items:center;justify-content:center}
+.qr .code svg{width:100%;height:100%}
+.qr .code.none{background:none;border:1px dashed var(--acc);color:var(--acc);font-family:var(--fm);font-size:12px}
+.widx{display:flex;gap:18px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.widx img,.widx .noimg{object-fit:cover;background:#000;flex-shrink:0}
+@media print{
+  @page{size:1123px 794px;margin:0}
+  html,body{background:none;height:auto;overflow:visible}
+  #app{display:block;height:auto}
+  aside,#toolbar,.plabel,.sellayer{display:none!important}
+  #stage{overflow:visible}
+  #pages{display:block;padding:0}
+  .pbox{width:1123px!important;height:794px!important;box-shadow:none;outline:none!important;break-after:page;page-break-after:always}
+  .pbox:last-child{break-after:auto;page-break-after:auto}
+  .pscale{transform:none!important}
+  .page{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .el-text[contenteditable]{outline:none}
+  .noprint{display:none!important}
+}
+.gate{position:fixed;inset:0;z-index:200;background:#0A0A0BF2;display:flex;align-items:center;justify-content:center}
+.gate .box{width:min(520px,92vw);background:var(--ui-bg);border:1px solid var(--ui-line);border-radius:14px;padding:28px}
+.gate h2{margin:0 0 10px;font-family:'Archivo',sans-serif;font-stretch:125%;font-weight:900;font-size:20px}
+.gate h2 span{color:var(--ui-acc)}
+.gate p{color:var(--ui-muted);line-height:1.8;margin:0 0 18px}
+.gate .row{gap:10px}
+#banner{display:none;position:sticky;top:45px;z-index:19;margin:0;padding:10px 16px;background:#2A1A12;border-bottom:1px solid #FF5A3666;color:var(--ui-ink);font-size:13px;align-items:center;gap:10px}
+#banner.show{display:flex}
+#banner .sp{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.chip{background:var(--ui-panel);border:1px solid var(--ui-line);color:var(--ui-muted);border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer;min-height:26px}
+.chip:hover{color:var(--ui-ink);border-color:var(--ui-muted)}
+.chip.on{background:#FF5A361F;border-color:var(--ui-acc);color:var(--ui-ink)}
+.chip.add{border-style:dashed}
+.olist{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.olist .oi{display:flex;align-items:center;gap:6px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:6px;padding:4px 8px}
+.olist .oi .t{flex:1}
+.preview{font-size:12px;color:var(--ui-ink);background:#0E0F11;border:1px solid var(--ui-line);border-radius:6px;padding:6px 8px;margin:-4px 0 10px;white-space:pre-wrap}
+.preview::before{content:'表示：';color:var(--ui-muted)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--ui-line);color:var(--ui-ink);padding:9px 16px;border-radius:8px;font-size:13px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.menu{position:absolute;z-index:40;background:var(--ui-bg);border:1px solid var(--ui-line);border-radius:8px;padding:4px;box-shadow:0 10px 30px #000a;min-width:200px}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ui-ink);padding:7px 10px;border-radius:5px;font:inherit;cursor:pointer}
+.menu button:hover{background:#ffffff12}
+.menu small{display:block;color:var(--ui-muted);font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <header><h1>PORTFOLIO<span>.</span>BUILDER</h1><div id="status"></div></header>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="scroll" id="panel"></div>
+  </aside>
+  <main id="stage">
+    <div id="toolbar">
+      <div class="grp"><button class="b sm" id="undoBtn" title="元に戻す (Ctrl+Z)">↶</button><button class="b sm" id="redoBtn" title="やり直す (Ctrl+Shift+Z)">↷</button></div>
+      <div class="grp"><span style="font-size:11px;color:var(--ui-muted)">追加</span>
+        <button class="b sm" data-add="text" title="テキストを追加">T テキスト</button>
+        <button class="b sm" data-add="image" title="画像枠を追加">▣ 画像</button>
+        <button class="b sm" data-add="rect" title="四角形を追加">■ 図形</button>
+        <button class="b sm" data-add="line" title="線を追加">― 線</button>
+        <button class="b sm" id="tokBtn" title="氏名などを自動で入れるテキスト">{ } 自動テキスト</button>
+      </div>
+      <span id="todo"></span>
+      <span class="sp"></span>
+      <label class="row" style="gap:6px;color:var(--ui-muted);font-size:12px">表示 <input type="range" id="zoom" min="0.3" max="1.2" step="0.05" style="width:100px"></label>
+      <button class="b sm pri" id="pdfBtn">PDFに書き出す</button>
+    </div>
+    <div id="banner"></div>
+    <div id="pages"></div>
+  </main>
+  <aside id="insp"><div class="scroll" id="inspPanel"></div></aside>
+</div>
+<input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="multiPick" accept="image/*" multiple hidden>
+<input type="file" id="jsonPick" accept=".json,application/json" hidden>
+<div class="toast" id="toast"></div>
+<div class="gate" id="gate" style="display:none"><div class="box" id="gateBox"></div></div>
+
+<script>
+const DEFAULT_IMAGES = {};
+</script>
+<script>
+'use strict';
+// =====================================================================
+//  constants
+// =====================================================================
+const PW = 1123, PH = 794;
+const THEMES = {
+  dark:{accent:'#FF5A36', bg:'#0C0D0F', ink:'#ECEAE4', muted:'#9C9EA6', line:'#2A2D33', panel:'#16181C'},
+  light:{accent:'#C2361C', bg:'#F5F4F0', ink:'#16171A', muted:'#5B5D63', line:'#D9D7D0', panel:'#E9E7E1'},
+  steel:{accent:'#4FB3FF', bg:'#0B0F14', ink:'#E6EDF3', muted:'#93A1B0', line:'#26303B', panel:'#141B23'},
+  mono:{accent:'#FFFFFF', bg:'#000000', ink:'#F2F2F2', muted:'#9A9A9A', line:'#2B2B2B', panel:'#141414'}
+};
+const THEME_NAMES = {dark:'ダーク', light:'ライト', steel:'スチール', mono:'モノクロ'};
+const LAYOUTS = {g6:{n:6,label:'6枚（2×3）'}, g4:{n:4,label:'4枚（2×2）'}, g3:{n:3,label:'3枚（大1＋小2）'}, g2:{n:2,label:'2枚（上下）'}, g1:{n:1,label:'1枚（全面）'}};
+const GOOGLE_FONTS = ['Archivo','Noto Sans JP','Noto Serif JP','JetBrains Mono','Zen Kaku Gothic New','Oswald','Inter'];
+const COLOR_TOKENS = [['accent','アクセント'],['ink','文字'],['muted','補助文字'],['bg','背景'],['panel','パネル'],['line','罫線'],['white','白'],['black','黒']];
+const TOKENS = [['name','氏名'],['kana','ふりがな'],['romaji','ローマ字'],['school','所属'],['email','連絡先'],['position','志望職種'],['tools','使用ツール'],['roles','肩書き'],['year','年'],['label','小見出し'],['page','ページ番号'],['total','総ページ数'],['works','作品数']];
+const SOFTWARE_DEFAULT = ['Blender','Maya','3ds Max','ZBrush','Substance 3D Painter','Substance 3D Designer','Marvelous Designer','Houdini','Cinema 4D','Unreal Engine','Unity','After Effects','Premiere Pro','DaVinci Resolve','Photoshop','Illustrator','Clip Studio Paint'];
+const ROLE_DEFAULT = ['企画・絵コンテ','モデリング','スカルプト','UV展開','テクスチャリング','マテリアル・シェーディング','リギング','アニメーション','エフェクト','ライティング','レンダリング','コンポジット','編集','音楽・サウンド'];
+const KINDS = ['ANIMATION','MODELING','STILL','PR MOVIE','CUTSCENE','MOTION GRAPHICS','VFX','GAME','ILLUSTRATION'];
+const CATEGORIES = ['授業課題','自主制作','産学連携・実習','コンテスト','依頼・業務'];
+const TEX_RES = [512, 1024, 2048, 4096, 8192];
+const TEX_MAPS = ['BaseColor','Normal','Roughness','Metallic','AO','Height','Emissive','Opacity'];
+const FIELDS = {category:{en:'TYPE', ja:'制作区分', ui:'制作区分'}, tools:{en:'TOOLS', ja:'使用ツール', ui:'使用ツール'}, date:{en:'DATE', ja:'制作時期', ui:'制作時期'}, length:{en:'LENGTH', ja:'尺', ui:'尺（映像の長さ）'}, roles:{en:'ROLE', ja:'担当', ui:'担当範囲'}, poly:{en:'POLYCOUNT', ja:'ポリゴン数', ui:'ポリゴン数'}, tex:{en:'TEXTURE', ja:'テクスチャ', ui:'テクスチャ'}, extra:{en:'', ja:'', ui:'自由な行（その他）'}};
+const LEFT_PARTS = {desc:'説明文', meta:'作品情報（TYPE・TOOLSなど）', video:'動画リンク・QR'};
+const DATE_FORMATS = {jp:'2025年7月', dot:'2025.07', slash:'2025/07', en:'JUL 2025'};
+const SEPS = {' / ':'Blender / Maya', '、':'Blender、Maya', ' · ':'Blender · Maya', ', ':'Blender, Maya'};
+function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
+function defaultInfo(){ return {kind:'ANIMATION', length:0, category:'', categoryNote:'', team:'', teamSize:0, tools:[], date:{y:null, m:null, range:false, y2:null, m2:null}, roles:[], roleNote:'', poly:{count:0, unit:'tris'}, tex:{res:0, sets:1, maps:[]}, extra:[]}; }
+const ST = () => P.settings;
+function toHalf(s){ return String(s ?? '').replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
+function orderBy(list, order){ return [...(list || [])].sort((a, b) => ((order.indexOf(a) + 1) || 999) - ((order.indexOf(b) + 1) || 999)); }
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function fmtDate1(y, m){ if (!y) return ''; const f = ST().dateFormat;
+  if (f === 'dot') return m ? `${y}.${pad2(m)}` : `${y}`; if (f === 'slash') return m ? `${y}/${pad2(m)}` : `${y}`; if (f === 'en') return m ? `${MON[m - 1]} ${y}` : `${y}`; return m ? `${y}年${m}月` : `${y}年`; }
+function fmtDate(d){ if (!d || !d.y) return ''; const a = fmtDate1(d.y, d.m); if (!d.range || !d.y2) return a;
+  const b = (ST().dateFormat === 'jp' && d.y2 === d.y && d.m2) ? `${d.m2}月` : fmtDate1(d.y2, d.m2); return `${a}${ST().dateFormat === 'en' ? ' – ' : '〜'}${b}`; }
+function fmtLen(sec, en){ sec = +sec || 0; if (!sec) return ''; if (sec < 120) return en ? `${sec} SEC` : `${sec}秒`; const m = Math.floor(sec / 60), s = sec % 60; if (en) return `${m} MIN${s ? ` ${s} SEC` : ''}`; return `${m}分${s ? `${s}秒` : ''}`; }
+function fmtTools(arr){ return orderBy(arr, ST().software).join(ST().toolSep); }
+function fmtRoles(i){ const r = orderBy(i.roles, ST().roleList).join('、'); return [r, i.roleNote].filter(Boolean).join('\n'); }
+function fmtCategory(i){ const parts = []; if (i.category) parts.push(i.category + (i.categoryNote ? `（${i.categoryNote}）` : '')); else if (i.categoryNote) parts.push(i.categoryNote);
+  if (i.team === 'solo') parts.push('個人制作'); if (i.team === 'team') parts.push(i.teamSize ? `チーム制作（${i.teamSize}人）` : 'チーム制作'); return parts.join('／'); }
+function fmtPoly(p){ return p && +p.count ? `${Number(p.count).toLocaleString('en-US')} ${p.unit}` : ''; }
+function fmtTex(t){ if (!t || !t.res) return ''; let s = `${t.res}×${t.res}`; if (+t.sets > 1) s += ` × ${t.sets}セット`; if (t.maps && t.maps.length) s += `\n${orderBy(t.maps, TEX_MAPS).join(' / ')}`; return s; }
+function fieldValue(k, i){ return k === 'category' ? fmtCategory(i) : k === 'tools' ? fmtTools(i.tools) : k === 'date' ? fmtDate(i.date) : k === 'length' ? fmtLen(i.length) : k === 'roles' ? fmtRoles(i) : k === 'poly' ? fmtPoly(i.poly) : k === 'tex' ? fmtTex(i.tex) : ''; }
+function metaRows(w){ const i = w.info, s = ST(), rows = [];
+  s.fieldOrder.forEach(k => { if (s.fieldOff.includes(k)) return;
+    if (k === 'extra'){ (i.extra || []).forEach(x => { if (x.k || x.v) rows.push([x.k, x.v]); }); return; }
+    const v = fieldValue(k, i); if (v) rows.push([FIELDS[k][s.labelLang], v]); });
+  return rows; }
+function heroTags(w){ if (!ST().heroAutoTags) return String(w.tags || '').split('\n').filter(Boolean);
+  const i = w.info; const l1 = [i.kind, fmtLen(i.length, true)].filter(Boolean).join(' · '); const l2 = orderBy(i.tools, ST().software).join(' / ').toUpperCase(); return [l1, l2].filter(Boolean); }
+function profileTools(){ const pr = P.profile; return pr.toolList && pr.toolList.length ? fmtTools(pr.toolList) : (pr.tools || ''); }
+const FONT_ROLES = [['heading','見出しフォント'],['body','本文フォント'],['mono','等幅フォント']];
+
+// =====================================================================
+//  default project
+// =====================================================================
+function E(type, x, y, w, h, extra){ return Object.assign({id:uid('e'), type, x, y, w, h, rot:0, opacity:1, locked:false, hidden:false}, extra); }
+function T(content, o){ return Object.assign({content, font:'body', size:24, weight:700, color:'ink', align:'left', lh:1.4, ls:0, upper:false, italic:false, stretch:true}, o || {}); }
+function coverElements(){
+  return [
+    E('image', 420, 0, 703, 420, {name:'メイン画像1', image:{src:'auto:hero:1', fit:'cover', px:50, py:50, radius:0, gray:false}}),
+    E('image', 420, 423, 350, 371, {name:'メイン画像2', image:{src:'auto:hero:2', fit:'cover', px:50, py:50, radius:0, gray:false}}),
+    E('image', 773, 423, 350, 371, {name:'メイン画像3', image:{src:'auto:hero:3', fit:'cover', px:40, py:50, radius:0, gray:false}}),
+    E('text', 48, 44, 324, 20, {name:'小見出し', text:T('{label}', {font:'mono', size:12, weight:400, color:'muted', ls:0.12, lh:1.4})}),
+    E('text', 48, 44, 324, 20, {name:'年', text:T('{year}', {font:'mono', size:12, weight:400, color:'muted', ls:0.12, align:'right'})}),
+    E('text', 48, 290, 340, 140, {name:'タイトル', text:T('PORT\nFOLIO**.**', {font:'heading', size:68, weight:900, lh:0.95, ls:-0.02})}),
+    E('text', 48, 450, 324, 90, {name:'肩書き', text:T('{roles}', {size:15, weight:400, color:'muted', lh:1.8})}),
+    E('line', 48, 592, 324, 10, {name:'区切り線', line:{color:'accent', sw:2}}),
+    E('text', 48, 612, 324, 40, {name:'氏名', text:T('{name}', {size:26, weight:700, lh:1.4})}),
+    E('text', 48, 652, 324, 20, {name:'ローマ字', text:T('{romaji}', {font:'mono', size:12, weight:400, color:'muted'})}),
+    E('text', 48, 686, 324, 56, {name:'連絡先', text:T('{school}\n{email}', {size:14, weight:400, lh:1.7})})
+  ];
+}
+function freeTemplate(kind){
+  if (kind === 'section') return {name:'セクション扉', bg:'bg', elements:[
+    E('text', 48, 300, 600, 24, {name:'ラベル', text:T('SECTION', {font:'mono', size:14, weight:500, color:'accent', ls:0.2})}),
+    E('text', 48, 330, 1000, 140, {name:'見出し', text:T('WORKS**.**', {font:'heading', size:120, weight:900, lh:1, ls:-0.02, upper:true})}),
+    E('line', 48, 500, 1027, 10, {name:'線', line:{color:'line', sw:1}}),
+    E('text', 48, 520, 600, 30, {name:'説明', text:T('[セクションの説明]', {size:15, weight:400, color:'muted'})})]};
+  if (kind === 'full') return {name:'全面画像', bg:'black', elements:[
+    E('image', 0, 0, 1123, 794, {name:'画像', image:{src:'', fit:'cover', px:50, py:50, radius:0, gray:false}}),
+    E('rect', 0, 714, 1123, 80, {name:'帯', rect:{fill:'bg', stroke:'', sw:0, radius:0}, opacity:0.85}),
+    E('text', 48, 738, 800, 30, {name:'キャプション', text:T('[キャプション]', {size:15, weight:500})}),
+    E('text', 875, 742, 200, 20, {name:'ページ番号', text:T('{page} / {total}', {font:'mono', size:12, weight:400, color:'muted', align:'right', ls:0.06})})]};
+  if (kind === 'text') return {name:'テキストページ', bg:'bg', elements:[
+    E('text', 48, 44, 700, 50, {name:'見出し', text:T('ABOUT ME**.**', {font:'heading', size:40, weight:900, upper:true, lh:1.1})}),
+    E('line', 48, 108, 1027, 10, {name:'線', line:{color:'line', sw:1}}),
+    E('text', 48, 140, 620, 520, {name:'本文', text:T('[ここに文章]', {size:15, weight:400, lh:1.8})}),
+    E('text', 875, 742, 200, 20, {name:'ページ番号', text:T('{page} / {total}', {font:'mono', size:12, weight:400, color:'muted', align:'right', ls:0.06})})]};
+  return {name:'白紙ページ', bg:'bg', elements:[]};
+}
+function newWork(){ return {id:uid('w'), type:'work', enabled:true, title:'New Work', subtitle:'[サブタイトル]', tags:'', hero:'', heroX:50, heroY:50, heroExtras:[],
+  info:defaultInfo(), desc:'[説明文]', showVideo:false, videoUrl:'',
+  details:[{layout:'g6', label:'BREAKDOWN', note:'', extras:[], cells:Array.from({length:6}, () => ({img:'', cap:''}))}]}; }
+function defaultProject(){
+  const W = (o) => Object.assign(newWork(), o);
+  return {
+    version:3,
+    settings:defaultSettings(),
+    theme:{preset:'dark', ...THEMES.dark, headingFont:'Archivo', bodyFont:'Noto Sans JP', monoFont:'JetBrains Mono', expanded:true},
+    profile:{coverLabel:'3DCG PORTFOLIO', year:String(new Date().getFullYear()), roles:'[志望職種など]',
+      name:'[氏名]', romaji:'[NAME IN ROMAJI]', kana:'[ふりがな]', school:'[大学名・学部・学科・学年]', email:'[メールアドレス]',
+      position:'[志望職種]', tools:'', toolList:[],
+      intro:'[自己紹介を2〜3文で。3DCGを始めたきっかけ、得意なこと、挑戦したいこと]'},
+    blocks:[
+      {id:'b_cover', type:'free', enabled:true, name:'表紙', bg:'bg', elements:coverElements()},
+      {id:'b_profile', type:'profile', enabled:true, extras:[]},
+      W({id:uid('w')})
+    ]
+  };
+}
+// migrate v1 (works array) -> v2 blocks
+function normalize(d){
+  const def = defaultProject();
+  d.theme = {...def.theme, ...(d.theme || {})};
+  d.profile = {...def.profile, ...(d.profile || {})};
+  d.settings = {...defaultSettings(), ...(d.settings || {})};
+  if (!Array.isArray(d.profile.toolList)){ d.profile.toolList = parseTools(d.profile.tools, d.settings); if (d.profile.toolList.length) d.profile.tools = ''; }
+  if (!d.blocks){
+    const works = (d.works || []).map(w => ({...w, type:'work'}));
+    d.blocks = [{id:'b_cover', type:'free', enabled:true, name:'表紙', bg:'bg', elements:coverElements()}, {id:'b_profile', type:'profile', enabled:true, extras:[]}, ...works];
+    delete d.works; delete d.profile.coverTitle;
+  }
+  d.blocks = d.blocks.map(b => {
+    if (b.type === 'work'){ const n = newWork(); const info = b.info ? {...defaultInfo(), ...b.info, date:{...defaultInfo().date, ...(b.info.date || {})}, poly:{...defaultInfo().poly, ...(b.info.poly || {})}, tex:{...defaultInfo().tex, ...(b.info.tex || {})}} : migrateInfo(b, d.settings);
+      const out = {...n, ...b, info, heroExtras:b.heroExtras || [],
+      details:(b.details || []).map(x => ({layout:'g6', label:'BREAKDOWN', note:'', extras:[], ...x, cells:x.cells || []}))}; delete out.meta; return out; }
+    if (b.type === 'free') return {enabled:true, name:'自由ページ', bg:'bg', ...b, elements:(b.elements || []).map(fixEl)};
+    if (b.type === 'profile') return {enabled:true, extras:[], ...b};
+    return b;
+  });
+  d.blocks.forEach(b => { if (b.type === 'work'){ b.heroExtras = b.heroExtras.map(fixEl); b.details.forEach(x => x.extras = (x.extras || []).map(fixEl)); } if (b.type === 'profile') b.extras = b.extras.map(fixEl); });
+  d.version = 3;
+  return d;
+}
+function parseTools(str, settings){
+  const out = [];
+  String(str || '').replace(/\[[^\]]*\]/g, '').split(/\s*(?:\/|／|、|,|·)\s*/).map(x => x.trim()).filter(Boolean).forEach(t => {
+    const hit = settings.software.find(sw => sw.toLowerCase() === t.toLowerCase());
+    if (hit) out.push(hit); else { settings.software.push(t); out.push(t); }
+  });
+  return out;
+}
+function migrateInfo(b, settings){
+  const i = defaultInfo(); const clean = v => String(v || '').replace(/\[[^\]]*\]/g, '').trim();
+  const t0 = String(b.tags || '').split('\n')[0] || ''; const kind = t0.split('·')[0].trim(); if (kind && !/\[/.test(kind)) i.kind = kind.toUpperCase();
+  const len = /(\d+)\s*SEC/i.exec(t0); if (len) i.length = +len[1];
+  (b.meta || []).forEach(m => {
+    const K = String(m.k || '').toUpperCase(); const v = m.v || '';
+    if (K === 'TOOLS') i.tools = parseTools(v, settings);
+    else if (K === 'DATE'){ const r = /(\d{4})\D+(\d{1,2})/.exec(toHalf(v)); if (r){ i.date.y = +r[1]; i.date.m = +r[2]; } }
+    else if (K === 'TYPE'){ const c = clean(v); if (/個人/.test(c)) i.team = 'solo'; const ts = /チーム\D*(\d+)/.exec(toHalf(c)); if (ts){ i.team = 'team'; i.teamSize = +ts[1]; } i.categoryNote = c.replace(/／?個人制作|／?チーム[^／]*/g, '').replace(/／$/, '').trim(); }
+    else if (K === 'ROLE') i.roleNote = clean(v);
+    else if (K === 'POLYCOUNT'){ const n = /([\d,]+)/.exec(toHalf(v)); if (n) i.poly.count = +n[1].replace(/,/g, ''); }
+    else if (clean(v)) i.extra.push({k:m.k, v:m.v});
+  });
+  return i;
+}
+function fixEl(e){
+  const base = {id:e.id || uid('e'), rot:0, opacity:1, locked:false, hidden:false, ...e};
+  if (base.type === 'text') base.text = T('', base.text);
+  if (base.type === 'image') base.image = {src:'', fit:'cover', px:50, py:50, radius:0, gray:false, ...(base.image || {})};
+  if (base.type === 'rect') base.rect = {fill:'accent', stroke:'', sw:0, radius:0, ...(base.rect || {})};
+  if (base.type === 'line') base.line = {color:'accent', sw:2, ...(base.line || {})};
+  return base;
+}
+
+// =====================================================================
+//  state
+// =====================================================================
+let P = null;          // project
+let IM = {};           // image id -> dataURL
+const URLC = {};       // image id -> blob URL (cache)
+let selBlock = 0;      // selected block index (left panel)
+let tab = 'pages';
+let zoom = null;
+let dirHandle = null;
+let localFonts = [];
+let undoStack = [], redoStack = [], lastSnap = '';
+let SEL = {ctx:null, ids:[]};   // element selection
+let ACTIVE = null;              // active page ctx (where new elements go)
+let EDITING = null;             // element id being text-edited
+let CLIP = [];                  // copied elements
+let PAGES = [];                 // last built page list
+
+// =====================================================================
+//  utils
+// =====================================================================
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rich = s => esc(P && P.settings && P.settings.halfWidth ? toHalf(s) : s).replace(/\[([^\]\n]*)\]/g, '<span class="ph">[$1]</span>').replace(/\*\*([^*\n]+)\*\*/g, '<span class="ph">$1</span>');
+const richBr = s => rich(s).replace(/\n/g, '<br>');
+const isJP = s => /[぀-ヿ㐀-鿿＀-￯]/.test(s || '');
+const pad2 = n => String(n).padStart(2, '0');
+const uid = p => p + '_' + Math.random().toString(36).slice(2, 9);
+const clone = o => JSON.parse(JSON.stringify(o));
+const r1 = v => Math.round(v * 10) / 10;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
+function getPath(path){ return path.split('.').reduce((o, k) => o?.[k], P); }
+function setPath(path, val){ const ks = path.split('.'); let o = P; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks.at(-1)] = val; }
+function col(c){ const m = {accent:'var(--acc)', ink:'var(--ink)', muted:'var(--muted)', bg:'var(--bg)', panel:'var(--panel)', line:'var(--line)', white:'#FFFFFF', black:'#000000'}; return m[c] || c || 'transparent'; }
+function fontStack(name, fb){ return `'${String(name).replace(/'/g, '')}', ${fb}`; }
+
+// =====================================================================
+//  storage
+// =====================================================================
+const DB = {
+  db:null,
+  open(){ return new Promise(res => { try { const r = indexedDB.open('portfolio-builder', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { this.db = r.result; res(); }; r.onerror = () => res(); } catch(e){ res(); } }); },
+  get(k){ return new Promise(res => { if (!this.db) return res(undefined); try { const r = this.db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => res(undefined); } catch(e){ res(undefined); } }); },
+  set(k, v){ return new Promise(res => { if (!this.db) return res(); try { const tx = this.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => res(); } catch(e){ res(); } }); }
+};
+let saveTimer = null;
+function persist(toFolder = true){
+  clearTimeout(saveTimer); saveTimer = setTimeout(async () => { await DB.set('project', JSON.stringify(P)); await DB.set('images', IM); }, 400);
+  if (toFolder && folderReady){ dirty = true; setStatus(); clearTimeout(folderTimer); folderTimer = setTimeout(() => folderSave(), 1200); }
+}
+// ---------- folder sync (the folder is the source of truth) ----------
+const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '0';
+let folderReady = false, dirty = false, saving = false, saveAgain = false, lastMtime = 0, savedAt = null, folderTimer = null, conflictShown = false;
+async function projFile(){ return (await dirHandle.getFileHandle('project.json')).getFile(); }
+async function folderSave(force){
+  if (!dirHandle || !folderReady) return;
+  if (saving){ saveAgain = true; return; }
+  saving = true; setStatus();
+  try {
+    let cur = null; try { cur = await projFile(); } catch(e){}
+    if (!force && cur && lastMtime && cur.lastModified > lastMtime + 1){ saving = false; showConflict(); return; }
+    const imgDir = await dirHandle.getDirectoryHandle('images', {create:true}); const map = {};
+    for (const id of usedImageIds()){
+      const url = IM[id]; if (!url) continue;
+      const ext = (url.match(/^data:image\/(\w+)/) || [, 'jpg'])[1].replace('jpeg', 'jpg');
+      const name = `${id}.${ext}`; map[id] = `images/${name}`;
+      let exists = false; try { await imgDir.getFileHandle(name); exists = true; } catch(e){}
+      if (!exists){ const fh = await imgDir.getFileHandle(name, {create:true}); const ws = await fh.createWritable(); await ws.write(dataURLtoBlob(url)); await ws.close(); }
+    }
+    const fh = await dirHandle.getFileHandle('project.json', {create:true}); const ws = await fh.createWritable();
+    await ws.write(JSON.stringify({...P, images:map}, null, 2)); await ws.close();
+    lastMtime = (await fh.getFile()).lastModified; dirty = false; savedAt = new Date(); hideBanner('conflict');
+  } catch(e){ toast('フォルダに保存できませんでした：' + e.message); }
+  saving = false; setStatus();
+  if (saveAgain){ saveAgain = false; folderSave(); }
+}
+async function checkRemote(){
+  if (!folderReady || saving || DRAG || EDITING || document.hidden) return;
+  try {
+    const f = await projFile();
+    if (f.lastModified > lastMtime + 1){
+      if (dirty) return showConflict();
+      await loadFromDir(dirHandle, {silent:true}); toast('別のPC（またはClaude）の変更を読み込みました');
+    }
+  } catch(e){}
+}
+let lastUpdCheck = 0;
+const HOSTED = location.protocol.startsWith('http');
+async function checkUpdate(){
+  if (Date.now() - lastUpdCheck < (HOSTED ? 60000 : 30000)) return; lastUpdCheck = Date.now();
+  if (bannerKind === 'update') return;
+  if (HOSTED){
+    try { const r = await fetch('./version.json', {cache:'no-store'}); const j = await r.json(); if (cmpVer(j.version, APP_VERSION) > 0) showBanner('update', `ツールの新しいバージョン（${esc(j.version)}）が届いています。${j.note ? '<span style="color:var(--ui-muted)">　' + esc(j.note) + '</span>' : ''}`, [['今すぐ更新', 'doUpdate']]); } catch(e){}
+    return;
+  }
+  if (!folderReady) return;
+  try {
+    for await (const [name, h] of dirHandle.entries()){
+      if (h.kind !== 'file' || !name.toLowerCase().endsWith('.html')) continue;
+      const head = await (await h.getFile()).slice(0, 4000).text();
+      const m = head.match(/name="app-version" content="([\d.]+)"/);
+      if (m && cmpVer(m[1], APP_VERSION) > 0){ showBanner('update', `ツールの新しいバージョン（${m[1]}）が届いています。`, [['今すぐ更新', 'doUpdate']], name); return; }
+    }
+  } catch(e){}
+}
+function cmpVer(a, b){ const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; }
+let bannerKind = null, bannerFile = null;
+function showBanner(kind, msg, buttons, file){ bannerKind = kind; bannerFile = file || null; const b = $('#banner'); b.innerHTML = `<span>${msg}</span><span class="sp"></span>${buttons.map(([l, a]) => `<button class="b sm ${a === 'doUpdate' || a === 'loadRemote' ? 'pri' : ''}" data-ban="${a}">${l}</button>`).join('')}`; b.classList.add('show'); }
+function hideBanner(kind){ if (!kind || bannerKind === kind){ $('#banner').classList.remove('show'); bannerKind = null; } }
+function showConflict(){ if (bannerKind === 'conflict') return; showBanner('conflict', '別のPC（またはClaude）がこのプロジェクトを変更しました。こちらにも未保存の変更があります。', [['向こうの変更を読み込む', 'loadRemote'], ['こちらで上書き', 'overwrite']]); }
+$('#banner').addEventListener('click', async e => {
+  const a = e.target.closest('[data-ban]')?.dataset.ban; if (!a) return;
+  if (a === 'loadRemote'){ dirty = false; hideBanner(); await loadFromDir(dirHandle, {silent:true}); toast('読み込みました'); }
+  if (a === 'overwrite'){ hideBanner(); await folderSave(true); toast('こちらの内容で保存しました'); }
+  if (a === 'doUpdate'){
+    if (dirty) await folderSave();
+    const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+    if (!HOSTED && bannerFile && here && here !== bannerFile){ toast(`フォルダ内の「${bannerFile}」を開き直してください（今開いているのは別の場所のファイルです）`); return; }
+    location.reload();
+  }
+});
+setInterval(() => { checkRemote(); checkUpdate(); }, 3000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden){ lastUpdCheck = 0; checkRemote(); checkUpdate(); } });
+window.addEventListener('beforeunload', e => { if (dirty && folderReady){ folderSave(); e.preventDefault(); e.returnValue = ''; } });
+// ---------- startup gate ----------
+function gate(html){ $('#gateBox').innerHTML = html; $('#gate').style.display = html ? 'flex' : 'none'; }
+async function connectFolder(h){
+  dirHandle = h; await DB.set('dir', h);
+  let has = false; try { await h.getFileHandle('project.json'); has = true; } catch(e){}
+  folderReady = true;
+  if (has) await loadFromDir(h, {silent:true}); else { await folderSave(true); toast(`「${h.name}」に今の内容を保存しました。これからは自動で保存されます`); }
+  gate(''); renderSide(); setStatus();
+}
+async function startFolder(){
+  if (!('showDirectoryPicker' in window)){ gate(''); return; }
+  if (dirHandle){
+    let st = 'prompt'; try { st = await dirHandle.queryPermission({mode:'readwrite'}); } catch(e){}
+    if (st === 'granted'){ try { await connectFolder(dirHandle); return; } catch(e){} }
+    gate(`<h2>PORTFOLIO<span>.</span>BUILDER</h2><p>プロジェクトフォルダ「<b style="color:var(--ui-ink)">${esc(dirHandle.name)}</b>」を開きます。<br>ブラウザから確認が出たら許可してください（「毎回許可」を選ぶと次からこの画面は出ません）。</p>
+      <div class="row wrap"><button class="b pri" id="gOpen">開く</button><button class="b" id="gPick">別のフォルダを選ぶ</button></div>`);
+    $('#gOpen').onclick = async () => { try { if ((await dirHandle.requestPermission({mode:'readwrite'})) === 'granted') await connectFolder(dirHandle); else toast('許可されませんでした'); } catch(e){ toast('開けませんでした：' + e.message); } };
+  } else {
+    gate(`<h2>PORTFOLIO<span>.</span>BUILDER</h2><p>このPCで初めて開きました。<br>Googleドライブの中の <b style="color:var(--ui-ink)">portfolio</b> フォルダ（project.json が入っているフォルダ）を選んでください。<br>以後はそのフォルダのデータを自動で読み込み、自動で保存します。</p>
+      <div class="row wrap"><button class="b pri" id="gPick">フォルダを選ぶ</button><button class="b" id="gSkip">フォルダなしで使う</button></div>`);
+    $('#gSkip').onclick = () => gate('');
+  }
+  $('#gPick').onclick = async () => { try { const h = await window.showDirectoryPicker({mode:'readwrite', id:'portfolio'}); await connectFolder(h); } catch(e){ if (e.name !== 'AbortError') toast('開けませんでした：' + e.message); } };
+}
+
+// =====================================================================
+//  history
+// =====================================================================
+function snapshot(){ const s = JSON.stringify(P); if (s !== lastSnap){ if (lastSnap) undoStack.push(lastSnap); if (undoStack.length > 100) undoStack.shift(); redoStack = []; lastSnap = s; } updUndo(); }
+let snapTimer = null;
+function snapshotSoon(){ clearTimeout(snapTimer); snapTimer = setTimeout(snapshot, 700); }
+function undo(){ clearTimeout(snapTimer); snapshot(); if (!undoStack.length) return; redoStack.push(lastSnap); lastSnap = undoStack.pop(); P = JSON.parse(lastSnap); afterLoad(); }
+function redo(){ if (!redoStack.length) return; undoStack.push(lastSnap); lastSnap = redoStack.pop(); P = JSON.parse(lastSnap); afterLoad(); }
+function afterLoad(toFolder = true){ selBlock = Math.max(0, Math.min(selBlock, P.blocks.length - 1)); SEL = {ctx:null, ids:[]}; EDITING = null; renderAll(); persist(toFolder); }
+function updUndo(){ $('#undoBtn').disabled = !undoStack.length && JSON.stringify(P) === lastSnap; $('#redoBtn').disabled = !redoStack.length; }
+// structural: rerender everything + snapshot; light: rerender pages only
+function changed(structural){ persist(); if (structural){ snapshot(); renderAll(); } else { snapshotSoon(); renderPages(); renderInspSoft(); } }
+
+// =====================================================================
+//  images
+// =====================================================================
+function dataURLtoBlob(u){ const [h, b] = u.split(','); const mime = (h.match(/data:([^;]+)/) || [, 'image/jpeg'])[1]; const bin = atob(b); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], {type:mime}); }
+function src(id){ if (!id || !IM[id]) return ''; if (!URLC[id]) { try { URLC[id] = URL.createObjectURL(dataURLtoBlob(IM[id])); } catch(e){ URLC[id] = IM[id]; } } return URLC[id]; }
+function readImage(file){
+  return new Promise((res, rej) => {
+    if (!file || !file.type.startsWith('image/')) return rej(new Error('画像ファイルではありません'));
+    const fr = new FileReader();
+    fr.onload = () => {
+      const url = fr.result; const img = new Image();
+      img.onload = () => {
+        const MAX = 2400;
+        if (img.width <= MAX && file.size < 2.5e6) return res(url);
+        const s = Math.min(1, MAX / img.width); const c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.92));
+      };
+      img.onerror = () => res(url); img.src = url;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+async function addImageFile(file){ const url = await readImage(file); const id = uid('img'); IM[id] = url; return id; }
+function imgRatio(id){ return new Promise(res => { const i = new Image(); i.onload = () => res(i.width / i.height || 16/9); i.onerror = () => res(16/9); i.src = src(id); }); }
+function usedImageIds(){
+  const s = new Set();
+  const walkEls = els => (els || []).forEach(e => { if (e.type === 'image' && e.image.src && !e.image.src.startsWith('auto:')) s.add(e.image.src); });
+  P.blocks.forEach(b => {
+    if (b.type === 'work'){ if (b.hero) s.add(b.hero); walkEls(b.heroExtras); b.details.forEach(d => { d.cells.forEach(c => c.img && s.add(c.img)); walkEls(d.extras); }); }
+    if (b.type === 'free') walkEls(b.elements);
+    if (b.type === 'profile') walkEls(b.extras);
+  });
+  return s;
+}
+function imgUseCount(){ const m = {}; const add = id => { if (id) m[id] = (m[id] || 0) + 1; };
+  const walkEls = els => (els || []).forEach(e => { if (e.type === 'image') add(e.image.src); });
+  P.blocks.forEach(b => { if (b.type === 'work'){ add(b.hero); walkEls(b.heroExtras); b.details.forEach(d => { d.cells.forEach(c => add(c.img)); walkEls(d.extras); }); } if (b.type === 'free') walkEls(b.elements); if (b.type === 'profile') walkEls(b.extras); });
+  return m; }
+// put an image (file or library id) onto a target path. path ends with the property to set.
+async function setImageAt(path, fileOrId){
+  try { const id = typeof fileOrId === 'string' ? fileOrId : await addImageFile(fileOrId); setPath(path, id); changed(true); toast('画像を入れました'); }
+  catch(e){ toast(e.message); }
+}
+let pickCb = null;
+function pickImage(cb){ pickCb = cb; $('#filePick').value = ''; $('#filePick').click(); }
+$('#filePick').addEventListener('change', async e => { const f = e.target.files[0]; if (f && pickCb){ try { const id = await addImageFile(f); pickCb(id); } catch(err){ toast(err.message); } } });
+$('#multiPick').addEventListener('change', async e => { const fs = [...e.target.files]; for (const f of fs){ try { await addImageFile(f); } catch(err){} } persist(); renderSide(); toast(`${fs.length} 枚の画像を素材に追加しました`); });
+
+// =====================================================================
+//  theme
+// =====================================================================
+function applyTheme(){
+  const t = P.theme, r = document.documentElement.style;
+  r.setProperty('--acc', t.accent); r.setProperty('--bg', t.bg); r.setProperty('--ink', t.ink); r.setProperty('--muted', t.muted); r.setProperty('--line', t.line); r.setProperty('--panel', t.panel);
+  r.setProperty('--fh', fontStack(t.headingFont, fontStack(t.bodyFont, 'sans-serif')));
+  r.setProperty('--fb', fontStack(t.bodyFont, "'Noto Sans JP', sans-serif"));
+  r.setProperty('--fm', fontStack(t.monoFont, "'Noto Sans JP', monospace"));
+  r.setProperty('--stretch', t.expanded ? '125%' : '100%');
+}
+
+// =====================================================================
+//  page model
+// =====================================================================
+function enabledWorks(){ return P.blocks.map((b, bi) => ({b, bi})).filter(x => x.b.type === 'work' && x.b.enabled); }
+function buildPages(){
+  const pages = []; let wn = 0;
+  const works = [];
+  P.blocks.forEach((b, bi) => {
+    if (!b.enabled) return;
+    if (b.type === 'free') pages.push({kind:'free', b, bi, ctx:`blocks.${bi}.elements`});
+    else if (b.type === 'profile') pages.push({kind:'profile', b, bi, ctx:`blocks.${bi}.extras`});
+    else if (b.type === 'work'){
+      wn++; const x = {b, bi, no:pad2(wn), page:pages.length + 1}; works.push(x);
+      pages.push({kind:'hero', ...x, ctx:`blocks.${bi}.heroExtras`});
+      b.details.forEach((d, di) => pages.push({kind:'detail', ...x, d, di, ctx:`blocks.${bi}.details.${di}.extras`}));
+    }
+  });
+  pages.forEach((p, i) => { p.n = i + 1; });
+  return {pages, works, total:pages.length};
+}
+function resolveImg(s, M){ if (!s) return ''; const m = /^auto:hero:(\d+)$/.exec(s); if (m){ const w = M.works[+m[1] - 1]; return w ? w.b.hero : ''; } return s; }
+function autoPos(s, M){ const m = /^auto:hero:(\d+)$/.exec(s || ''); if (m){ const w = M.works[+m[1] - 1]; if (w) return [w.b.heroX, w.b.heroY]; } return null; }
+function fillTokens(s, pg, M){
+  const pr = P.profile;
+  const map = {name:pr.name, kana:pr.kana, romaji:pr.romaji, school:pr.school, email:pr.email, position:pr.position, tools:profileTools(), roles:pr.roles, year:pr.year, label:pr.coverLabel, page:pad2(pg.n), total:pad2(M.total), works:String(M.works.length)};
+  return String(s ?? '').replace(/\{(\w+)\}/g, (m, k) => k in map ? map[k] : m);
+}
+
+// =====================================================================
+//  element rendering
+// =====================================================================
+function fontCSS(t){
+  if (t.font === 'heading') return `font-family:var(--fh);font-stretch:${t.stretch === false ? '100%' : 'var(--stretch)'};`;
+  if (t.font === 'body') return 'font-family:var(--fb);';
+  if (t.font === 'mono') return 'font-family:var(--fm);';
+  return `font-family:${fontStack(t.font, 'var(--fb)')};`;
+}
+function elBoxStyle(e){ return `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;${e.rot ? `transform:rotate(${e.rot}deg);` : ''}${e.opacity != null && e.opacity < 1 ? `opacity:${e.opacity};` : ''}`; }
+function elHTML(e, pg, M, ctx, idx){
+  if (e.hidden) return '';
+  const base = `class="el el-${e.type}${e.locked ? ' locked' : ''}" data-eid="${e.id}" data-ctx="${ctx}" style="${elBoxStyle(e)}z-index:${idx + 1};`;
+  if (e.type === 'text'){
+    const t = e.text, ed = EDITING === e.id;
+    const st = `${fontCSS(t)}font-size:${t.size}px;font-weight:${t.weight};color:${col(t.color)};text-align:${t.align};line-height:${t.lh};letter-spacing:${t.ls}em;${t.upper ? 'text-transform:uppercase;' : ''}${t.italic ? 'font-style:italic;' : ''}`;
+    return `<div ${base}${st}" ${ed ? 'contenteditable="plaintext-only" spellcheck="false"' : ''}>${ed ? esc(t.content) : rich(fillTokens(t.content, pg, M))}</div>`;
+  }
+  if (e.type === 'image'){
+    const im = e.image, id = resolveImg(im.src, M); const ap = autoPos(im.src, M);
+    const pos = ap && im.px === 50 && im.py === 50 ? ap : [im.px, im.py];
+    const inner = id && IM[id]
+      ? `<img src="${src(id)}" alt="" draggable="false" style="object-fit:${im.fit};object-position:${pos[0]}% ${pos[1]}%;border-radius:${im.radius}px;${im.gray ? 'filter:grayscale(1);' : ''}">`
+      : `<div class="empty" style="border-radius:${im.radius}px"><b>[${esc(e.name || '画像')}]</b><span>${im.src && im.src.startsWith('auto:') ? '対応する作品がありません' : '画像をドロップ / ダブルクリック'}</span></div>`;
+    return `<div ${base}">${inner}</div>`;
+  }
+  if (e.type === 'rect'){ const r = e.rect; return `<div ${base}background:${col(r.fill)};${r.sw ? `border:${r.sw}px solid ${col(r.stroke || 'ink')};` : ''}border-radius:${r.radius}px"></div>`; }
+  if (e.type === 'line'){ const l = e.line; return `<div ${base}"><i style="height:${l.sw}px;background:${col(l.color)}"></i></div>`; }
+  return '';
+}
+function layerHTML(els, pg, M, ctx){ return `<div class="layer" data-ctx="${ctx}">${(els || []).map((e, i) => elHTML(e, pg, M, ctx, i)).join('')}</div>`; }
+
+// =====================================================================
+//  template page renderers
+// =====================================================================
+function footer(n, M){ return `<div class="foot"><span>${rich(P.profile.name)} — ${esc(P.profile.coverLabel)}</span><span>${pad2(n)} / ${pad2(M.total)}</span></div>`; }
+function slot(id, path, label, hint, pos){
+  return id && IM[id] ? `<img class="fill" src="${src(id)}" alt="" draggable="false" data-drop="${path}" style="${pos || ''}">`
+    : `<div class="empty" data-drop="${path}"><b>[${esc(label)}]</b><span>${esc(hint || 'ここに画像をドロップ')}</span></div>`;
+}
+function renderFree(pg, M){ return `<div class="page free" style="background:${col(pg.b.bg || 'bg')}">${layerHTML(pg.b.elements, pg, M, pg.ctx)}</div>`; }
+function renderProfile(pg, M){
+  const pr = P.profile; const cnt = Math.max(M.works.length, 1);
+  const th = Math.max(44, Math.min(108, Math.floor(560 / cnt) - 26)); const tw = Math.round(th * 16 / 9);
+  const rows = M.works.map(x => `<div class="widx">
+      ${x.b.hero && IM[x.b.hero] ? `<img src="${src(x.b.hero)}" alt="" style="width:${tw}px;height:${th}px;object-position:${x.b.heroX}% ${x.b.heroY}%">` : `<div class="noimg" style="width:${tw}px;height:${th}px"></div>`}
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
+        <span class="exp" style="font-weight:900;font-size:16px;color:var(--acc)">${x.no}</span>
+        <span style="font-size:${cnt > 4 ? 16 : 19}px;font-weight:700">${rich(x.b.title)}</span>
+        ${cnt <= 5 ? `<span class="muted" style="font-size:13px">${rich(x.b.subtitle)}</span>` : ''}
+      </div><span class="mono muted" style="font-size:12px">P.${pad2(x.page)}</span></div>`).join('');
+  const meta = [['NAME', `${pr.name}（${pr.kana}）`], ['SCHOOL', pr.school], ['POSITION', pr.position], [ST().labelLang === 'ja' ? '使用ツール' : 'TOOLS', profileTools()], ['CONTACT', pr.email]];
+  return `<div class="page pad">
+    <div class="hdr"><h1 class="exp" style="margin:0;font-weight:900;font-size:40px;text-transform:uppercase">Profile<span class="ph">.</span></h1><span class="mono muted" style="font-size:12px;letter-spacing:.12em">ABOUT &amp; WORKS</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div style="width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:18px">
+        <div class="meta">${meta.map(([k, v]) => `<div><span class="k">${k}</span><span class="v">${richBr(v)}</span></div>`).join('')}</div>
+        <p class="desc">${richBr(pr.intro)}</p>
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span class="mono muted" style="font-size:12px;letter-spacing:.12em;padding-bottom:8px">WORKS</span>${rows}</div>
+    </div>${footer(pg.n, M)}${layerHTML(pg.b.extras, pg, M, pg.ctx)}</div>`;
+}
+function renderHero(pg, M){
+  const w = pg.b, p = `blocks.${pg.bi}`;
+  return `<div class="page">
+    <div class="hero-img">${slot(w.hero, `${p}.hero`, 'メイン画像', 'ここに画像をドロップ（16:9推奨）', `object-position:${w.heroX}% ${w.heroY}%`)}</div>
+    <div class="hero-band"><span class="hero-no">${pg.no}</span>
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0"><h1 class="hero-t ${isJP(w.title) ? 'jp' : 'lat'}">${rich(w.title)}</h1><p class="muted" style="margin:0;font-size:15px">${rich(w.subtitle)}</p></div>
+      <div class="hero-tags">${heroTags(w).map(t => `<span>${rich(t)}</span>`).join('')}<span style="margin-top:8px;color:var(--ink)">${pad2(pg.n)} / ${pad2(M.total)}</span></div>
+    </div>${layerHTML(w.heroExtras, pg, M, pg.ctx)}</div>`;
+}
+function qrHTML(url){
+  if (!url) return `<div class="code none">[QR]</div>`;
+  try { if (window.qrcode){ const q = qrcode(0, 'M'); q.addData(url); q.make(); return `<div class="code">${q.createSvgTag({cellSize:2, margin:0, scalable:true})}</div>`; } } catch(e){}
+  return `<div class="code none">QR</div>`;
+}
+function renderDetail(pg, M){
+  const w = pg.b, d = pg.d, p = `blocks.${pg.bi}.details.${pg.di}`;
+  const L = LAYOUTS[d.layout] || LAYOUTS.g6; const cells = [];
+  for (let k = 0; k < L.n; k++){
+    const c = d.cells[k] || {img:'', cap:''}; const cp = `${p}.cells.${k}.img`;
+    cells.push(c.img && IM[c.img] ? `<div class="cell"><img src="${src(c.img)}" alt="" draggable="false" data-drop="${cp}">${c.cap ? `<span class="cap">${rich(c.cap)}</span>` : ''}</div>`
+      : `<div class="cell" style="background:none">${slot('', cp, c.cap || '画像', 'ここに画像をドロップ')}</div>`);
+  }
+  const parts = {
+    desc:() => w.desc ? `<p class="desc">${richBr(w.desc)}</p>` : '',
+    meta:() => { const rows = metaRows(w); return rows.length ? `<div class="meta">${rows.map(([k, v]) => `<div><span class="k">${esc(k)}</span><span class="v">${richBr(v)}</span></div>`).join('')}</div>` : ''; },
+    video:() => w.showVideo ? `<div class="qr">${qrHTML(w.videoUrl)}<div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono muted" style="font-size:12px;letter-spacing:.08em">WATCH${w.info.length ? ' · ' + esc(fmtLen(w.info.length, true)) : ''}</span><span style="font-size:13px;word-break:break-all">${w.videoUrl ? esc(w.videoUrl) : '<span class="ph">[動画URL]</span>'}</span></div></div>` : ''
+  };
+  const left = pg.di === 0 ? `<div class="dleft">${ST().leftOrder.map(k => parts[k] ? parts[k]() : '').join('')}</div>`
+    : (d.note ? `<div class="dleft"><p class="desc">${richBr(d.note)}</p></div>` : '');
+  return `<div class="page pad">
+    <div class="hdr"><span class="exp" style="font-weight:800;font-size:20px;${isJP(w.title) ? '' : 'text-transform:uppercase'}"><span class="ph">${pg.no}</span>&nbsp;&nbsp;${rich(w.title)}</span><span class="mono muted" style="font-size:12px;letter-spacing:.12em">${esc(d.label || 'BREAKDOWN')}</span></div>
+    <div class="dbody">${left}<div class="grid ${d.layout in LAYOUTS ? d.layout : 'g6'}">${cells.join('')}</div></div>
+    ${footer(pg.n, M)}${layerHTML(d.extras, pg, M, pg.ctx)}</div>`;
+}
+function pageLabel(pg){
+  if (pg.kind === 'free') return pg.b.name || '自由ページ';
+  if (pg.kind === 'profile') return 'プロフィール・目次';
+  if (pg.kind === 'hero') return `作品${pg.no} 扉`;
+  return `作品${pg.no} 詳細${pg.b.details.length > 1 ? ' ' + (pg.di + 1) : ''}`;
+}
+
+// =====================================================================
+//  render all pages
+// =====================================================================
+let renderQueued = false;
+function renderPages(){ if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; doRenderPages(); }); }
+function doRenderPages(){
+  applyTheme();
+  const M = buildPages(); PAGES = M.pages;
+  if (!ACTIVE || !M.pages.some(p => p.ctx === ACTIVE)) ACTIVE = M.pages[0]?.ctx || null;
+  const z = getZoom();
+  $('#pages').innerHTML = M.pages.map(pg => {
+    const inner = pg.kind === 'free' ? renderFree(pg, M) : pg.kind === 'profile' ? renderProfile(pg, M) : pg.kind === 'hero' ? renderHero(pg, M) : renderDetail(pg, M);
+    const sb = pg.bi === selBlock && tab === 'pages';
+    return `<div class="pbox ${sb ? 'selb' : ''} ${pg.ctx === ACTIVE ? 'act' : ''}" data-ctx="${pg.ctx}" data-bi="${pg.bi}" style="width:${PW * z}px;height:${PH * z}px"><span class="plabel">P.${pad2(pg.n)}　${esc(pageLabel(pg))}${pg.ctx === ACTIVE ? '　← 追加先' : ''}</span><div class="pscale" style="transform:scale(${z})">${inner}<div class="sellayer"></div></div></div>`;
+  }).join('');
+  drawSelection();
+  if (EDITING){ const el = document.querySelector(`.el[data-eid="${EDITING}"]`); if (el && document.activeElement !== el){ el.focus(); placeCaretEnd(el); } }
+  updTodo(); updUndo();
+}
+function getZoom(){ if (zoom == null){ const w = $('#stage').clientWidth - 60; zoom = Math.max(0.3, Math.min(1, Math.floor(w / PW * 20) / 20)); $('#zoom').value = zoom; } return zoom; }
+function placeCaretEnd(el){ try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e){} }
+
+// =====================================================================
+//  selection & element editing on canvas
+// =====================================================================
+function ctxEls(ctx){ return ctx ? (getPath(ctx) || []) : []; }
+function selEls(){ const els = ctxEls(SEL.ctx); return SEL.ids.map(id => els.find(e => e.id === id)).filter(Boolean); }
+function setSel(ctx, ids){ SEL = {ctx, ids}; if (ctx) ACTIVE = ctx; drawSelection(); renderInsp(); markActive(); }
+function markActive(){ document.querySelectorAll('.pbox').forEach(b => { const on = b.dataset.ctx === ACTIVE; b.classList.toggle('act', on); const l = b.querySelector('.plabel'); if (l) l.textContent = l.textContent.replace('　← 追加先', '') + (on ? '　← 追加先' : ''); }); }
+function pboxOf(ctx){ return document.querySelector(`.pbox[data-ctx="${ctx}"]`); }
+function bbox(els){ const xs = els.map(e => e.x), ys = els.map(e => e.y), x2 = els.map(e => e.x + e.w), y2 = els.map(e => e.y + e.h); const x = Math.min(...xs), y = Math.min(...ys); return {x, y, w:Math.max(...x2) - x, h:Math.max(...y2) - y}; }
+function drawSelection(guides){
+  document.querySelectorAll('.sellayer').forEach(l => l.innerHTML = '');
+  const els = selEls(); if (!els.length) return;
+  const box = pboxOf(SEL.ctx); if (!box) return;
+  const layer = box.querySelector('.sellayer'); const z = getZoom(); const hs = 12 / z;
+  let h = '';
+  if (els.length === 1){
+    const e = els[0];
+    h += `<div class="sbox" style="${elBoxStyle(e)}border-width:${1.5 / z}px">`;
+    if (!e.locked && EDITING !== e.id){
+      const dirs = e.type === 'line' ? ['w', 'e'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+      const pos = {nw:[0, 0], n:[50, 0], ne:[100, 0], e:[100, 50], se:[100, 100], s:[50, 100], sw:[0, 100], w:[0, 50]};
+      const cur = {nw:'nwse', se:'nwse', ne:'nesw', sw:'nesw', n:'ns', s:'ns', e:'ew', w:'ew'};
+      dirs.forEach(d => h += `<div class="hd" data-hd="${d}" style="left:${pos[d][0]}%;top:${pos[d][1]}%;width:${hs}px;height:${hs}px;border-width:${1.5 / z}px;cursor:${cur[d]}-resize"></div>`);
+    }
+    h += `</div>`;
+  } else {
+    els.forEach(e => h += `<div class="sbox" style="${elBoxStyle(e)}border-width:${1.5 / z}px"></div>`);
+    const b = bbox(els); h += `<div class="sbox multi" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;border-width:${1 / z}px"></div>`;
+  }
+  (guides || []).forEach(g => h += g.v ? `<div class="guide" style="left:${g.v}px;top:0;width:${1 / z}px;height:${PH}px"></div>` : `<div class="guide" style="top:${g.h}px;left:0;height:${1 / z}px;width:${PW}px"></div>`);
+  layer.innerHTML = h;
+}
+// snapping
+function snapCands(ctx, exclude){
+  const xs = [0, 48, PW / 2, PW - 48, PW], ys = [0, 44, PH / 2, PH - 44, PH];
+  ctxEls(ctx).forEach(e => { if (exclude.includes(e.id) || e.hidden) return; xs.push(e.x, e.x + e.w / 2, e.x + e.w); ys.push(e.y, e.y + e.h / 2, e.y + e.h); });
+  return {xs, ys};
+}
+function snapAxis(vals, cands, th){ let best = null; vals.forEach((v, i) => cands.forEach(c => { const d = c - v; if (Math.abs(d) <= th && (!best || Math.abs(d) < Math.abs(best.d))) best = {d, at:c}; })); return best; }
+let DRAG = null;
+$('#pages').addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  const pbox = e.target.closest('.pbox'); if (!pbox) return;
+  const hd = e.target.closest('.hd');
+  const elNode = e.target.closest('.el');
+  if (EDITING && (!elNode || elNode.dataset.eid !== EDITING)) finishEdit();
+  if (EDITING && elNode && elNode.dataset.eid === EDITING) return; // typing
+  if (hd){ e.preventDefault(); const el = selEls()[0]; if (!el) return; DRAG = {mode:'resize', dir:hd.dataset.hd, start:{x:e.clientX, y:e.clientY}, orig:clone(el), ratio:el.w / el.h, moved:false}; pbox.setPointerCapture?.(e.pointerId); return; }
+  if (elNode){
+    const ctx = elNode.dataset.ctx, id = elNode.dataset.eid;
+    const el = ctxEls(ctx).find(x => x.id === id);
+    if (e.shiftKey && SEL.ctx === ctx){ const ids = SEL.ids.includes(id) ? SEL.ids.filter(x => x !== id) : [...SEL.ids, id]; setSel(ctx, ids); return; }
+    if (!(SEL.ctx === ctx && SEL.ids.includes(id))) setSel(ctx, [id]);
+    if (el && el.locked) return;
+    e.preventDefault();
+    DRAG = {mode:'move', start:{x:e.clientX, y:e.clientY}, orig:selEls().filter(x => !x.locked).map(clone), moved:false};
+    return;
+  }
+  // click on page background
+  const ctx = pbox.dataset.ctx;
+  if (SEL.ids.length) setSel(null, []);
+  ACTIVE = ctx; markActive();
+  const bi = +pbox.dataset.bi; if (bi !== selBlock){ selBlock = bi; renderSide(); document.querySelectorAll('.pbox').forEach(b => b.classList.toggle('selb', +b.dataset.bi === selBlock && tab === 'pages')); }
+});
+window.addEventListener('pointermove', e => {
+  if (!DRAG) return;
+  const z = getZoom(); let dx = (e.clientX - DRAG.start.x) / z, dy = (e.clientY - DRAG.start.y) / z;
+  if (!DRAG.moved && Math.hypot(dx, dy) < 2) return;
+  DRAG.moved = true;
+  const els = ctxEls(SEL.ctx); const th = 6 / z; const guides = [];
+  if (DRAG.mode === 'move'){
+    if (e.shiftKey){ if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; }
+    const b = bbox(DRAG.orig.map(o => ({...o, x:o.x + dx, y:o.y + dy})));
+    if (!e.altKey){
+      const c = snapCands(SEL.ctx, SEL.ids);
+      const sx = snapAxis([b.x, b.x + b.w / 2, b.x + b.w], c.xs, th); if (sx){ dx += sx.d; guides.push({v:sx.at}); }
+      const sy = snapAxis([b.y, b.y + b.h / 2, b.y + b.h], c.ys, th); if (sy){ dy += sy.d; guides.push({h:sy.at}); }
+    }
+    DRAG.orig.forEach(o => { const el = els.find(x => x.id === o.id); if (el){ el.x = Math.round(o.x + dx); el.y = Math.round(o.y + dy); const n = document.querySelector(`.el[data-eid="${el.id}"]`); if (n){ n.style.left = el.x + 'px'; n.style.top = el.y + 'px'; } } });
+  } else {
+    const o = DRAG.orig, el = els.find(x => x.id === o.id); if (!el) return;
+    let {x, y, w, h} = o; const d = DRAG.dir;
+    if (d.includes('e')) w = o.w + dx; if (d.includes('w')){ w = o.w - dx; x = o.x + dx; }
+    if (d.includes('s')) h = o.h + dy; if (d.includes('n')){ h = o.h - dy; y = o.y + dy; }
+    if (!e.altKey){
+      const c = snapCands(SEL.ctx, [o.id]);
+      if (d.includes('e')){ const s = snapAxis([x + w], c.xs, th); if (s){ w += s.d; guides.push({v:s.at}); } }
+      if (d.includes('w')){ const s = snapAxis([x], c.xs, th); if (s){ x += s.d; w -= s.d; guides.push({v:s.at}); } }
+      if (d.includes('s')){ const s = snapAxis([y + h], c.ys, th); if (s){ h += s.d; guides.push({h:s.at}); } }
+      if (d.includes('n')){ const s = snapAxis([y], c.ys, th); if (s){ y += s.d; h -= s.d; guides.push({h:s.at}); } }
+    }
+    const keep = (e.shiftKey || (el.type === 'image' && el.image.src && d.length === 2 && !e.ctrlKey)) && d.length === 2;
+    if (keep){ const nh = w / DRAG.ratio; if (d.includes('n')) y = o.y + o.h - nh; h = nh; }
+    w = Math.max(8, w); h = Math.max(el.type === 'line' ? o.h : 8, h);
+    if (el.type === 'line'){ h = o.h; y = o.y; }
+    Object.assign(el, {x:Math.round(x), y:Math.round(y), w:Math.round(w), h:Math.round(h)});
+    const n = document.querySelector(`.el[data-eid="${el.id}"]`); if (n){ n.style.left = el.x + 'px'; n.style.top = el.y + 'px'; n.style.width = el.w + 'px'; n.style.height = el.h + 'px'; }
+  }
+  drawSelection(guides); renderInspSoft();
+});
+window.addEventListener('pointerup', () => { if (!DRAG) return; const moved = DRAG.moved; DRAG = null; if (moved){ persist(); snapshot(); drawSelection(); renderInsp(); } });
+// double click: edit text / pick image
+$('#pages').addEventListener('dblclick', e => {
+  const n = e.target.closest('.el'); if (!n) return;
+  const el = ctxEls(n.dataset.ctx).find(x => x.id === n.dataset.eid); if (!el || el.locked) return;
+  if (el.type === 'text'){
+    EDITING = el.id; setSel(n.dataset.ctx, [el.id]); doRenderPages();
+    const node = document.querySelector(`.el[data-eid="${el.id}"]`);
+    if (node){ node.focus(); try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null; const s = getSelection(); s.removeAllRanges(); if (r && node.contains(r.startContainer)) s.addRange(r); else placeCaretEnd(node); } catch(err){ placeCaretEnd(node); } }
+  }
+  if (el.type === 'image'){ const ctx = n.dataset.ctx; pickImage(id => { const t = ctxEls(ctx).find(x => x.id === el.id); if (t){ t.image.src = id; changed(true); } }); }
+});
+function finishEdit(){
+  if (!EDITING) return; const node = document.querySelector(`.el[data-eid="${EDITING}"]`);
+  const el = selEls().find(x => x.id === EDITING) || findElAnywhere(EDITING);
+  if (node && el) el.text.content = node.innerText.replace(/\n$/, '');
+  EDITING = null; changed(true);
+}
+function findElAnywhere(id){ for (const pg of PAGES){ const e = ctxEls(pg.ctx).find(x => x.id === id); if (e) return e; } return null; }
+$('#pages').addEventListener('focusout', e => { if (e.target.matches && e.target.matches('.el[contenteditable]')) setTimeout(() => { if (EDITING && document.activeElement !== document.querySelector(`.el[data-eid="${EDITING}"]`)) finishEdit(); }, 0); });
+// clicks on empty template slots open picker
+$('#pages').addEventListener('click', e => { const d = e.target.closest('[data-drop]'); if (d && d.classList.contains('empty') && !e.target.closest('.el')) pickImage(id => setImageAt(d.dataset.drop, id)); });
+
+// drag & drop images onto the canvas
+function dropInfo(e){ const files = e.dataTransfer.files; const lib = e.dataTransfer.getData('text/x-img'); return {file:files && files[0], lib}; }
+$('#pages').addEventListener('dragover', e => {
+  const types = [...e.dataTransfer.types]; if (!types.includes('Files') && !types.includes('text/x-img')) return;
+  e.preventDefault(); document.querySelectorAll('.dropmark').forEach(x => x.classList.remove('dropmark'));
+  const t = e.target.closest('[data-drop]') || e.target.closest('.el-image') || e.target.closest('.page'); if (t) t.classList.add('dropmark');
+});
+$('#pages').addEventListener('dragleave', e => { const t = e.target.closest('.dropmark'); if (t) t.classList.remove('dropmark'); });
+$('#pages').addEventListener('drop', async e => {
+  document.querySelectorAll('.dropmark').forEach(x => x.classList.remove('dropmark'));
+  const {file, lib} = dropInfo(e); if (!file && !lib) return; e.preventDefault();
+  let id = lib; if (!id){ try { id = await addImageFile(file); } catch(err){ return toast(err.message); } }
+  const slotEl = e.target.closest('[data-drop]');
+  if (slotEl && !e.target.closest('.el')) return setImageAt(slotEl.dataset.drop, id);
+  const imgEl = e.target.closest('.el-image');
+  if (imgEl){ const t = ctxEls(imgEl.dataset.ctx).find(x => x.id === imgEl.dataset.eid); if (t){ t.image.src = id; setSel(imgEl.dataset.ctx, [t.id]); changed(true); return; } }
+  const pbox = e.target.closest('.pbox'); if (!pbox) return;
+  const r = pbox.getBoundingClientRect(), z = getZoom();
+  const ratio = await imgRatio(id); const w = Math.min(480, PW); const h = Math.round(w / ratio);
+  const x = Math.round((e.clientX - r.left) / z - w / 2), y = Math.round((e.clientY - r.top) / z - h / 2);
+  addElement(pbox.dataset.ctx, E('image', x, y, w, h, {name:'画像', image:{src:id, fit:'cover', px:50, py:50, radius:0, gray:false}}));
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+// element operations
+function addElement(ctx, el){ if (!ctx){ toast('追加先のページをクリックしてから追加してください'); return; } const arr = getPath(ctx); if (!arr) return; arr.push(fixEl(el)); SEL = {ctx, ids:[el.id]}; ACTIVE = ctx; changed(true); }
+function addByType(type){
+  const ctx = ACTIVE; const cx = PW / 2, cy = PH / 2;
+  if (type === 'text') addElement(ctx, E('text', cx - 200, cy - 30, 400, 60, {name:'テキスト', text:T('テキストを入力', {size:32})}));
+  if (type === 'image') addElement(ctx, E('image', cx - 240, cy - 135, 480, 270, {name:'画像', image:{src:'', fit:'cover', px:50, py:50, radius:0, gray:false}}));
+  if (type === 'rect') addElement(ctx, E('rect', cx - 150, cy - 100, 300, 200, {name:'図形', rect:{fill:'accent', stroke:'', sw:0, radius:0}}));
+  if (type === 'line') addElement(ctx, E('line', cx - 200, cy - 5, 400, 10, {name:'線', line:{color:'accent', sw:2}}));
+}
+function deleteSel(){ if (!SEL.ids.length) return; const arr = ctxEls(SEL.ctx); const keep = arr.filter(e => !SEL.ids.includes(e.id) || e.locked); arr.length = 0; arr.push(...keep); SEL.ids = []; changed(true); }
+function duplicateSel(){ const els = selEls(); if (!els.length) return; const arr = ctxEls(SEL.ctx); const copies = els.map(e => ({...clone(e), id:uid('e'), x:e.x + 16, y:e.y + 16, locked:false})); arr.push(...copies); SEL.ids = copies.map(c => c.id); changed(true); }
+function copySel(){ CLIP = selEls().map(clone); if (CLIP.length) toast(`${CLIP.length} 個の要素をコピーしました`); }
+function paste(){ if (!CLIP.length) return; const ctx = ACTIVE; if (!ctx) return; const arr = getPath(ctx); const same = ctx === SEL.ctx; const copies = CLIP.map(e => ({...clone(e), id:uid('e'), x:same ? e.x + 16 : e.x, y:same ? e.y + 16 : e.y})); arr.push(...copies); SEL = {ctx, ids:copies.map(c => c.id)}; changed(true); }
+function nudge(dx, dy){ selEls().forEach(e => { if (!e.locked){ e.x += dx; e.y += dy; } }); changed(false); drawSelection(); }
+function reorder(mode){
+  const arr = ctxEls(SEL.ctx); const ids = SEL.ids; if (!ids.length) return;
+  const sel = arr.filter(e => ids.includes(e.id)), rest = arr.filter(e => !ids.includes(e.id));
+  let out;
+  if (mode === 'front') out = [...rest, ...sel];
+  else if (mode === 'back') out = [...sel, ...rest];
+  else { out = arr.slice(); const step = mode === 'up' ? 1 : -1; const idxs = out.map((e, i) => ids.includes(e.id) ? i : -1).filter(i => i >= 0); if (step > 0) idxs.reverse(); idxs.forEach(i => { const j = i + step; if (j >= 0 && j < out.length && !ids.includes(out[j].id)) [out[i], out[j]] = [out[j], out[i]]; }); }
+  arr.length = 0; arr.push(...out); changed(true);
+}
+function align(mode){
+  const els = selEls().filter(e => !e.locked); if (!els.length) return;
+  const ref = els.length > 1 ? bbox(els) : {x:0, y:0, w:PW, h:PH};
+  els.forEach(e => {
+    if (mode === 'l') e.x = ref.x; if (mode === 'c') e.x = Math.round(ref.x + ref.w / 2 - e.w / 2); if (mode === 'r') e.x = ref.x + ref.w - e.w;
+    if (mode === 't') e.y = ref.y; if (mode === 'm') e.y = Math.round(ref.y + ref.h / 2 - e.h / 2); if (mode === 'b') e.y = ref.y + ref.h - e.h;
+  });
+  changed(true);
+}
+function distribute(axis){
+  const els = selEls().filter(e => !e.locked); if (els.length < 3) return toast('3つ以上選ぶと等間隔にできます');
+  const k = axis === 'h' ? 'x' : 'y', s = axis === 'h' ? 'w' : 'h';
+  els.sort((a, b) => a[k] - b[k]); const b = bbox(els); const total = els.reduce((t, e) => t + e[s], 0);
+  const gap = ((axis === 'h' ? b.w : b.h) - total) / (els.length - 1); let pos = axis === 'h' ? b.x : b.y;
+  els.forEach(e => { e[k] = Math.round(pos); pos += e[s] + gap; }); changed(true);
+}
+
+// =====================================================================
+//  keyboard
+// =====================================================================
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey; const ae = document.activeElement;
+  const typing = ae && (['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName) || ae.isContentEditable);
+  if (mod && e.key.toLowerCase() === 's'){ e.preventDefault(); if ('showDirectoryPicker' in window) saveToDir(); else exportJson(); return; }
+  if (EDITING && e.key === 'Escape'){ e.preventDefault(); ae.blur(); finishEdit(); return; }
+  if (typing) return;
+  if (mod && e.key.toLowerCase() === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && e.key.toLowerCase() === 'y'){ e.preventDefault(); redo(); return; }
+  if (mod && e.key.toLowerCase() === 'd'){ e.preventDefault(); duplicateSel(); return; }
+  if (mod && e.key.toLowerCase() === 'c'){ copySel(); return; }
+  if (mod && e.key.toLowerCase() === 'v'){ e.preventDefault(); paste(); return; }
+  if (mod && e.key.toLowerCase() === 'a' && ACTIVE){ e.preventDefault(); setSel(ACTIVE, ctxEls(ACTIVE).filter(x => !x.hidden).map(x => x.id)); return; }
+  if (!SEL.ids.length) return;
+  if (e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); deleteSel(); return; }
+  if (e.key === 'Escape'){ setSel(null, []); return; }
+  if (e.key === 'Enter'){ const el = selEls()[0]; if (el && el.type === 'text' && !el.locked){ e.preventDefault(); EDITING = el.id; doRenderPages(); } return; }
+  const st = e.shiftKey ? 10 : 1;
+  const mv = {ArrowLeft:[-st, 0], ArrowRight:[st, 0], ArrowUp:[0, -st], ArrowDown:[0, st]}[e.key];
+  if (mv){ e.preventDefault(); nudge(...mv); }
+  if (mod && e.key === ']'){ e.preventDefault(); reorder(e.shiftKey ? 'front' : 'up'); }
+  if (mod && e.key === '['){ e.preventDefault(); reorder(e.shiftKey ? 'back' : 'down'); }
+});
+
+// =====================================================================
+//  inspector (right panel)
+// =====================================================================
+function colorField(path, value, label){
+  const isTok = COLOR_TOKENS.some(([k]) => k === value);
+  const hex = isTok ? '' : (value || '#ffffff');
+  return `<label class="f"><span>${label}</span><div class="row"><select data-path="${path}" data-colorsel>${COLOR_TOKENS.map(([k, l]) => `<option value="${k}" ${value === k ? 'selected' : ''}>${l}（テーマ）</option>`).join('')}<option value="__custom" ${!isTok && value ? 'selected' : ''}>カスタム色</option>${label.includes('枠') ? `<option value="" ${!value ? 'selected' : ''}>なし</option>` : ''}</select>${!isTok && value ? `<input type="color" data-path="${path}" value="${esc(hex)}">` : ''}</div></label>`;
+}
+function num(path, v, label, step){ return `<label><span class="mini">${label}</span><input type="number" step="${step || 1}" data-path="${path}" data-num value="${v}"></label>`; }
+let inspTimer = null;
+function renderInspSoft(){ clearTimeout(inspTimer); inspTimer = setTimeout(() => { const a = document.activeElement; if (a && $('#inspPanel').contains(a) && a.tagName !== 'BUTTON') return; renderInsp(); }, 120); }
+function renderInsp(){
+  const els = selEls(); const box = $('#inspPanel');
+  if (!els.length){ box.innerHTML = inspEmpty(); return; }
+  const arr = ctxEls(SEL.ctx);
+  const common = `<div class="sec"><h3>整列 ${els.length > 1 ? '（選択範囲）' : '（ページ基準）'}</h3>
+      <div class="g4" style="grid-template-columns:repeat(6,1fr)">${[['l','⇤','左揃え'],['c','↔','左右中央'],['r','⇥','右揃え'],['t','⤒','上揃え'],['m','↕','上下中央'],['b','⤓','下揃え']].map(([k, i, t]) => `<button class="b sm" data-al="${k}" title="${t}">${i}</button>`).join('')}</div>
+      ${els.length > 2 ? `<div class="row" style="margin-top:6px"><button class="b sm grow" data-dist="h">横に等間隔</button><button class="b sm grow" data-dist="v">縦に等間隔</button></div>` : ''}</div>
+    <div class="sec"><h3>重なり順</h3><div class="g4"><button class="b sm" data-ord="front" title="最前面 (Ctrl+Shift+])">最前面</button><button class="b sm" data-ord="up" title="前へ (Ctrl+])">前へ</button><button class="b sm" data-ord="down" title="後ろへ (Ctrl+[)">後ろへ</button><button class="b sm" data-ord="back" title="最背面 (Ctrl+Shift+[)">最背面</button></div></div>
+    <div class="sec row wrap"><button class="b sm" data-op="dup">複製 Ctrl+D</button><button class="b sm" data-op="copy">コピー</button><button class="b sm danger" data-op="del">削除 Del</button></div>`;
+  if (els.length > 1){ box.innerHTML = `<div class="sec"><h3>${els.length} 個を選択中</h3><div class="hint">Shift+クリックで選択を追加・解除できます。</div></div>${common}`; return; }
+  const e = els[0]; const i = arr.indexOf(e); const p = `${SEL.ctx}.${i}`;
+  const typeName = {text:'テキスト', image:'画像', rect:'図形', line:'線'}[e.type];
+  let spec = '';
+  if (e.type === 'text'){
+    const t = e.text, q = `${p}.text`;
+    spec = `<div class="sec"><h3>テキスト</h3>
+      <label class="f"><span>内容（ダブルクリックでも編集できます）</span><textarea data-path="${q}.content" rows="3">${esc(t.content)}</textarea></label>
+      <div class="hint">［ ］は赤（未記入）、**文字** はアクセント色、{name} などはプロフィールが自動で入ります。</div>
+      <label class="f"><span>フォント</span><select data-path="${q}.font" data-fontsel>${FONT_ROLES.map(([k, l]) => `<option value="${k}" ${t.font === k ? 'selected' : ''}>${l}（テーマ）</option>`).join('')}<option value="__custom" ${!FONT_ROLES.some(([k]) => k === t.font) ? 'selected' : ''}>個別に指定…</option></select></label>
+      ${!FONT_ROLES.some(([k]) => k === t.font) ? `<label class="f"><span>フォント名</span><input type="text" list="fontlist" data-path="${q}.font" value="${esc(t.font)}"></label>` : ''}
+      <div class="g2">${num(q + '.size', t.size, 'サイズ px')}<label><span class="mini">太さ</span><select data-path="${q}.weight" data-num>${[300, 400, 500, 700, 800, 900].map(w => `<option ${+t.weight === w ? 'selected' : ''}>${w}</option>`).join('')}</select></label>${num(q + '.lh', t.lh, '行間', 0.05)}${num(q + '.ls', t.ls, '字間 em', 0.01)}</div>
+      <div class="row" style="margin:10px 0">${[['left','左'],['center','中'],['right','右']].map(([k, l]) => `<button class="b sm ${t.align === k ? 'on' : ''}" data-set="${q}.align" data-val="${k}">${l}</button>`).join('')}
+        <button class="b sm ${t.upper ? 'on' : ''}" data-tog="${q}.upper" title="英字を大文字に">AA</button><button class="b sm ${t.italic ? 'on' : ''}" data-tog="${q}.italic" title="斜体"><i>I</i></button>${t.font === 'heading' ? `<button class="b sm ${t.stretch !== false ? 'on' : ''}" data-tog="${q}.stretch" title="横長">↔</button>` : ''}</div>
+      ${colorField(q + '.color', t.color, '文字の色')}
+      <div class="row wrap"><span class="mini" style="width:100%">自動テキストを挿入</span>${TOKENS.map(([k, l]) => `<button class="b sm" data-tokin="${k}" title="{${k}}">${l}</button>`).join('')}</div></div>`;
+  }
+  if (e.type === 'image'){
+    const im = e.image, q = `${p}.image`; const isAuto = (im.src || '').startsWith('auto:');
+    const nw = enabledWorks().length;
+    spec = `<div class="sec"><h3>画像</h3>
+      <div class="drop" data-elpick="1" style="margin-bottom:8px">${im.src && !isAuto && IM[im.src] ? `<img src="${src(im.src)}" alt="">` : isAuto ? '作品のメイン画像を自動表示中' : 'クリックで画像を選ぶ'}</div>
+      <label class="f"><span>画像の元</span><select data-path="${q}.src" data-struct>
+        <option value="${isAuto ? '' : esc(im.src)}" ${!isAuto ? 'selected' : ''}>自分で入れた画像</option>
+        ${Array.from({length:Math.max(nw, 3)}, (_, k) => `<option value="auto:hero:${k + 1}" ${im.src === `auto:hero:${k + 1}` ? 'selected' : ''}>自動：${k + 1}番目の作品のメイン画像</option>`).join('')}
+      </select></label>
+      <div class="hint">「自動」にすると、作品の並べ替えに合わせて画像も入れ替わります。素材タブから画像をドラッグしても入れられます。</div>
+      <div class="row" style="margin-bottom:8px">${[['cover','枠いっぱい'],['contain','全体を表示']].map(([k, l]) => `<button class="b sm ${im.fit === k ? 'on' : ''}" data-set="${q}.fit" data-val="${k}">${l}</button>`).join('')}<button class="b sm ${im.gray ? 'on' : ''}" data-tog="${q}.gray">白黒</button></div>
+      <label class="f"><span>表示位置 左右 ${im.px}%</span><input type="range" min="0" max="100" data-path="${q}.px" data-num value="${im.px}"></label>
+      <label class="f"><span>表示位置 上下 ${im.py}%</span><input type="range" min="0" max="100" data-path="${q}.py" data-num value="${im.py}"></label>
+      <div class="g2">${num(q + '.radius', im.radius, '角丸 px')}<label><span class="mini">名前（空の時に表示）</span><input type="text" data-path="${p}.name" value="${esc(e.name || '')}"></label></div></div>`;
+  }
+  if (e.type === 'rect'){ const r = e.rect, q = `${p}.rect`;
+    spec = `<div class="sec"><h3>図形</h3>${colorField(q + '.fill', r.fill, '塗り')}${colorField(q + '.stroke', r.stroke, '枠線')}<div class="g2">${num(q + '.sw', r.sw, '枠線の太さ')}${num(q + '.radius', r.radius, '角丸 px')}</div></div>`; }
+  if (e.type === 'line'){ const l = e.line, q = `${p}.line`;
+    spec = `<div class="sec"><h3>線</h3>${colorField(q + '.color', l.color, '色')}<div class="g2">${num(q + '.sw', l.sw, '太さ px', 0.5)}</div><div class="hint">斜めにするには「回転」を使います。</div></div>`; }
+  box.innerHTML = `<div class="sec"><h3><span>${typeName}</span><span class="row" style="gap:2px"><button class="ib" data-tog="${p}.locked" title="ロック（動かないようにする）">${e.locked ? '🔒' : '🔓'}</button><button class="ib" data-tog="${p}.hidden" title="非表示">${e.hidden ? '🙈' : '👁'}</button></span></h3>
+    <div class="g4">${num(p + '.x', e.x, 'X')}${num(p + '.y', e.y, 'Y')}${num(p + '.w', e.w, '幅')}${num(p + '.h', e.h, '高さ')}</div>
+    <div class="g2" style="margin-top:6px">${num(p + '.rot', e.rot, '回転 °')}<label><span class="mini">不透明度 ${Math.round((e.opacity ?? 1) * 100)}%</span><input type="range" min="0" max="1" step="0.05" data-path="${p}.opacity" data-num value="${e.opacity ?? 1}"></label></div></div>
+    ${spec}${common}`;
+}
+function inspEmpty(){
+  const pg = PAGES.find(p => p.ctx === ACTIVE);
+  const els = ctxEls(ACTIVE);
+  return `<div class="sec"><h3>ページ</h3><div class="hint">${pg ? `追加先：<b style="color:var(--ui-ink)">P.${pad2(pg.n)} ${esc(pageLabel(pg))}</b><br>` : ''}ページをクリックすると、そのページが「追加先」になります。上のバーからテキストや画像を追加できます。</div>
+    ${els.length ? `<div class="sec"><h3>このページの要素</h3>${els.map(e => `<div class="issue ok" data-pickel="${e.id}"><span class="tag">${{text:'文字', image:'画像', rect:'図形', line:'線'}[e.type]}</span><span>${esc(e.name || (e.type === 'text' ? e.text.content.slice(0, 24) : ''))}${e.locked ? ' 🔒' : ''}${e.hidden ? ' 🙈' : ''}</span></div>`).join('')}</div>` : ''}</div>
+    <div class="sec"><h3>操作</h3><div class="keys">
+      <kbd>クリック</kbd><span>選択（Shift+クリックで追加）</span><kbd>ドラッグ</kbd><span>移動（Shiftで縦横固定、Altで吸着オフ）</span>
+      <kbd>四隅</kbd><span>拡大縮小（Shiftで比率固定）</span><kbd>ダブルクリック</kbd><span>文字を編集／画像を選ぶ</span>
+      <kbd>矢印</kbd><span>1px移動（Shiftで10px）</span><kbd>Ctrl+D</kbd><span>複製</span><kbd>Ctrl+C / V</kbd><span>コピー／貼り付け（他のページにも）</span>
+      <kbd>Ctrl+A</kbd><span>ページ内を全選択</span><kbd>Delete</kbd><span>削除</span><kbd>Ctrl+Z</kbd><span>元に戻す</span><kbd>Ctrl+S</kbd><span>フォルダに保存</span><kbd>Esc</kbd><span>選択解除</span></div></div>`;
+}
+const inspP = $('#inspPanel');
+inspP.addEventListener('input', e => {
+  const el = e.target; const path = el.dataset.path; if (!path) return;
+  if (el.dataset.colorsel !== undefined){ setPath(path, el.value === '__custom' ? '#FFFFFF' : el.value); return changed(true); }
+  if (el.dataset.fontsel !== undefined){ setPath(path, el.value === '__custom' ? (P.theme.bodyFont) : el.value); return changed(true); }
+  let v = el.value; if (el.dataset.num !== undefined){ v = parseFloat(v); if (isNaN(v)) return; }
+  setPath(path, v);
+  if (el.dataset.struct !== undefined) return changed(true);
+  persist(); snapshotSoon(); renderPages();
+  if (el.type === 'range'){ const s = el.previousElementSibling; if (s && s.tagName === 'SPAN') s.textContent = s.textContent.replace(/[\d.]+%/, (path.endsWith('opacity') ? Math.round(v * 100) : v) + '%'); }
+});
+inspP.addEventListener('click', e => {
+  const b = e.target.closest('button, [data-elpick], [data-pickel]'); if (!b) return;
+  if (b.dataset.al) return align(b.dataset.al);
+  if (b.dataset.dist) return distribute(b.dataset.dist);
+  if (b.dataset.ord) return reorder(b.dataset.ord);
+  if (b.dataset.op === 'dup') return duplicateSel();
+  if (b.dataset.op === 'copy') return copySel();
+  if (b.dataset.op === 'del') return deleteSel();
+  if (b.dataset.set){ setPath(b.dataset.set, b.dataset.val); return changed(true); }
+  if (b.dataset.tog){ const cur = getPath(b.dataset.tog); setPath(b.dataset.tog, b.dataset.tog.endsWith('stretch') ? cur === false : !cur); return changed(true); }
+  if (b.dataset.tokin){ const el = selEls()[0]; if (el && el.type === 'text'){ el.text.content += `{${b.dataset.tokin}}`; changed(true); } return; }
+  if (b.dataset.elpick){ const el = selEls()[0]; const ctx = SEL.ctx; pickImage(id => { el.image.src = id; changed(true); }); return; }
+  if (b.dataset.pickel){ setSel(ACTIVE, [b.dataset.pickel]); }
+});
+inspP.addEventListener('dragover', e => { const d = e.target.closest('[data-elpick]'); if (d){ e.preventDefault(); d.classList.add('over'); } });
+inspP.addEventListener('drop', async e => { const d = e.target.closest('[data-elpick]'); if (!d) return; e.preventDefault(); const {file, lib} = dropInfo(e); const el = selEls()[0]; if (!el) return; let id = lib; if (!id && file){ try { id = await addImageFile(file); } catch(err){ return toast(err.message); } } if (id){ el.image.src = id; changed(true); } });
+
+// =====================================================================
+//  left panel
+// =====================================================================
+const TABS = [['pages','構成'],['assets','素材'],['profile','プロフィール'],['design','デザイン'],['file','保存・PDF']];
+function renderTabs(){ $('#tabs').innerHTML = TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join(''); }
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b){ tab = b.dataset.tab; renderAll(); } });
+function fld(path, label, opts = {}){
+  const v = getPath(path) ?? '';
+  const inp = opts.rows ? `<textarea data-path="${path}" rows="${opts.rows}">${esc(v)}</textarea>` : `<input type="${opts.type || 'text'}" data-path="${path}" value="${esc(v)}" ${opts.list ? `list="${opts.list}"` : ''} placeholder="${esc(opts.ph || '')}">`;
+  return `<label class="f"><span>${label}</span>${inp}${opts.hint ? `<div class="hint">${opts.hint}</div>` : ''}</label>`;
+}
+function dropBox(path, id, label){ return `<div class="drop" data-pick="${path}">${id && IM[id] ? `<img src="${src(id)}" alt=""><button class="x" data-clear="${path}" title="画像を外す">✕</button>` : esc(label || 'クリック or ドロップ')}</div>`; }
+function blockInfo(){ const M = buildPages(); const m = {}; M.works.forEach(x => m[x.bi] = x.no); const pg = {}; M.pages.forEach(p => { if (!(p.bi in pg)) pg[p.bi] = p.n; }); return {no:m, page:pg, M}; }
+function panelPages(){
+  const info = blockInfo();
+  const list = P.blocks.map((b, i) => {
+    const kind = b.type === 'work' ? `<span class="no">${info.no[i] || '—'}</span>` : `<span class="kind">${b.type === 'free' ? '自由' : '目次'}</span>`;
+    const name = b.type === 'work' ? b.title : b.type === 'profile' ? 'プロフィール・目次' : (b.name || '自由ページ');
+    const thumb = b.type === 'work' ? (b.hero && IM[b.hero] ? `<img src="${src(b.hero)}" alt="">` : '<span class="noimg"></span>') : '';
+    const pages = b.type === 'work' ? 1 + b.details.length : 1;
+    return `<div class="bitem ${i === selBlock ? 'sel' : ''} ${b.enabled ? '' : 'off'}" draggable="true" data-i="${i}">
+      <span class="grip" title="ドラッグで並べ替え">⠿</span>${kind}${thumb}
+      <span class="t" title="${esc(name)}">${esc(name)}</span><span style="font-size:10px;color:var(--ui-muted)">${b.enabled ? 'P.' + pad2(info.page[i] || 0) : '非表示'}${pages > 1 ? `〜${pages}p` : ''}</span>
+      <span class="row" style="gap:0"><button class="ib" data-act="up" data-i="${i}" title="上へ">▲</button><button class="ib" data-act="down" data-i="${i}" title="下へ">▼</button>
+      <button class="ib" data-act="toggle" data-i="${i}" title="${b.enabled ? 'ポートフォリオから外す（削除はしない）' : '戻す'}">${b.enabled ? '◉' : '○'}</button></span></div>`;
+  }).join('');
+  const b = P.blocks[selBlock]; let ed = '';
+  if (b && b.type === 'work') ed = workEditor(b, selBlock, info.no[selBlock]);
+  if (b && b.type === 'free') ed = `<div class="sec"><h3>自由ページ</h3>${fld(`blocks.${selBlock}.name`, 'ページ名（一覧用・PDFには出ません）')}
+      ${colorField(`blocks.${selBlock}.bg`, b.bg, '背景色')}
+      <div class="hint">ページ上で要素をクリックして編集します。右のパネルに詳しい設定が出ます。</div>
+      <div class="row wrap"><button class="b sm" data-act="dupBlock">このページを複製</button><button class="b sm danger" data-act="delBlock">このページを削除</button></div></div>`;
+  if (b && b.type === 'profile') ed = `<div class="sec"><h3>プロフィール・目次</h3><div class="hint">内容は「プロフィール」タブで編集します。目次は作品の並びに合わせて自動で作られます。このページの上にも、テキストや画像を自由に追加できます。</div></div>`;
+  return `<div class="sec"><h3>ページ構成</h3><div class="hint">ドラッグか ▲▼ で並べ替えると、作品番号・ページ番号・目次・表紙の画像が自動で直ります。◉ で一時的に外せます。</div>
+    <div class="blist">${list}</div>
+    <div class="row wrap"><button class="b pri sm" data-act="addWork">＋ 作品</button><button class="b sm" id="addFreeBtn">＋ 自由ページ ▾</button></div></div>${ed}`;
+}
+function chips(path, list, selected, extra){ return `<div class="chips">${list.map(v => `<button class="chip ${(selected || []).includes(v) ? 'on' : ''}" data-chip="${path}" data-val="${esc(v)}">${esc(v)}</button>`).join('')}${extra || ''}</div>`; }
+function yearOpts(v){ const now = new Date().getFullYear(); let o = `<option value="" ${!v ? 'selected' : ''}>年</option>`; for (let y = now + 1; y >= 2010; y--) o += `<option value="${y}" ${+v === y ? 'selected' : ''}>${y}年</option>`; return o; }
+function monthOpts(v){ let o = `<option value="" ${!v ? 'selected' : ''}>月</option>`; for (let m = 1; m <= 12; m++) o += `<option value="${m}" ${+v === m ? 'selected' : ''}>${m}月</option>`; return o; }
+function pv(text){ return text ? `<div class="preview">${esc(ST().halfWidth ? toHalf(text) : text)}</div>` : ''; }
+function workEditor(w, bi, no){
+  const p = `blocks.${bi}`, q = `${p}.info`, i = w.info, S = ST();
+  const kindCustom = !KINDS.includes(i.kind);
+  return `<div class="sec"><h3>作品 ${no || ''} の基本</h3>
+      ${fld(p + '.title', 'タイトル（日本語なら和文の見た目に自動で切り替え）')}${fld(p + '.subtitle', 'サブタイトル')}
+      <label class="f"><span>メイン画像（扉・表紙・目次で使われます）</span>${dropBox(p + '.hero', w.hero, 'クリック or ドロップでメイン画像')}</label>
+      <div class="row"><label class="f grow"><span>表示位置 左右</span><input type="range" min="0" max="100" data-path="${p}.heroX" data-num value="${w.heroX}"></label><label class="f grow"><span>上下</span><input type="range" min="0" max="100" data-path="${p}.heroY" data-num value="${w.heroY}"></label></div>
+      ${S.heroAutoTags ? `<div class="hint">扉ページ右下のタグは、下の「作品の種類・尺・使用ツール」から自動で作られます。</div>` : fld(p + '.tags', '扉ページ右下のタグ（1行ずつ）', {rows:2})}
+    </div>
+    <div class="sec"><h3>説明文</h3>${fld(p + '.desc', '', {rows:5})}</div>
+    <div class="sec"><h3>作品情報</h3>
+      <div class="hint">選ぶだけで、全作品が同じ書式になります（数字は自動で半角）。書式は「デザイン」タブで一括変更できます。</div>
+      <div class="g2"><label class="f"><span>作品の種類</span><select data-path="${q}.kind" data-struct>${KINDS.map(k => `<option ${i.kind === k ? 'selected' : ''}>${k}</option>`).join('')}<option value="${kindCustom ? esc(i.kind) : 'CUSTOM'}" ${kindCustom ? 'selected' : ''}>その他（自分で入力）</option></select></label>
+      <label class="f"><span>尺（秒）※映像のみ</span><input type="number" min="0" step="1" data-path="${q}.length" data-num value="${i.length || ''}" placeholder="例：60"></label></div>
+      ${kindCustom ? fld(q + '.kind', '種類を入力（英字推奨）') : ''}
+      <label class="f"><span>制作区分</span><select data-path="${q}.category" data-struct><option value="" ${!i.category ? 'selected' : ''}>選択しない</option>${CATEGORIES.map(c => `<option ${i.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+      ${fld(q + '.categoryNote', '補足（授業名・連携先など）', {ph:'例：◯◯演習 最終課題'})}
+      <div class="row" style="margin-bottom:8px"><span class="mini" style="margin:0 6px 0 0">体制</span>${[['solo', '個人制作'], ['team', 'チーム制作'], ['', '書かない']].map(([k, l]) => `<button class="chip ${i.team === k ? 'on' : ''}" data-setv="${q}.team" data-val="${k}">${l}</button>`).join('')}
+        ${i.team === 'team' ? `<input type="number" min="2" style="width:70px" data-path="${q}.teamSize" data-num value="${i.teamSize || ''}" placeholder="人数">` : ''}</div>
+      ${pv(fmtCategory(i))}
+      <label class="f"><span>使用ツール（押した順ではなく、決まった順で並びます）</span></label>
+      ${chips(q + '.tools', S.software, i.tools, `<button class="chip add" data-addlist="settings.software" data-also="${q}.tools">＋ 追加</button>`)}
+      ${pv(fmtTools(i.tools))}
+      <label class="f" style="margin-bottom:4px"><span>制作時期</span></label>
+      <div class="row" style="margin-bottom:6px"><select data-path="${q}.date.y" data-numnull>${yearOpts(i.date.y)}</select><select data-path="${q}.date.m" data-numnull>${monthOpts(i.date.m)}</select></div>
+      <label class="row" style="gap:8px;margin-bottom:6px"><input type="checkbox" data-path="${q}.date.range" data-bool ${i.date.range ? 'checked' : ''}> 期間にする（〜まで）</label>
+      ${i.date.range ? `<div class="row" style="margin-bottom:6px"><span class="mini" style="margin:0">〜</span><select data-path="${q}.date.y2" data-numnull>${yearOpts(i.date.y2)}</select><select data-path="${q}.date.m2" data-numnull>${monthOpts(i.date.m2)}</select></div>` : ''}
+      ${pv(fmtDate(i.date))}
+      <label class="f" style="margin-bottom:4px"><span>担当範囲</span></label>
+      ${chips(q + '.roles', S.roleList, i.roles, `<button class="chip add" data-addlist="settings.roleList" data-also="${q}.roles">＋ 追加</button>`)}
+      ${fld(q + '.roleNote', '担当の補足（任意・2行目に出ます）', {rows:2})}
+      <details ${(+i.poly.count || i.tex.res) ? 'open' : ''} style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--ui-muted);font-size:12px;margin-bottom:8px">モデリング情報（ポリゴン数・テクスチャ）</summary>
+        <div class="g2"><label class="f"><span>ポリゴン数</span><input type="number" min="0" data-path="${q}.poly.count" data-num value="${+i.poly.count || ''}" placeholder="例：12000"></label>
+        <label class="f"><span>単位</span><select data-path="${q}.poly.unit" data-struct>${['tris', 'polys', 'verts'].map(u => `<option ${i.poly.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></label></div>
+        <div class="g2"><label class="f"><span>テクスチャ解像度</span><select data-path="${q}.tex.res" data-numnull><option value="">なし</option>${TEX_RES.map(r => `<option value="${r}" ${+i.tex.res === r ? 'selected' : ''}>${r}×${r}</option>`).join('')}</select></label>
+        <label class="f"><span>セット数</span><input type="number" min="1" data-path="${q}.tex.sets" data-num value="${i.tex.sets || 1}"></label></div>
+        ${chips(q + '.tex.maps', TEX_MAPS, i.tex.maps)}
+        ${pv([fmtPoly(i.poly), fmtTex(i.tex)].filter(Boolean).join('\n'))}
+      </details>
+      <label class="f" style="margin-bottom:4px"><span>その他の行（自由に追加）</span></label>
+      ${(i.extra || []).map((m, mi) => `<div class="metaRow"><input type="text" data-path="${q}.extra.${mi}.k" value="${esc(m.k)}" placeholder="見出し"><input type="text" class="grow" data-path="${q}.extra.${mi}.v" value="${esc(m.v)}" placeholder="内容"><button class="ib" data-act="extraDel" data-mi="${mi}" title="この行を削除">✕</button></div>`).join('')}
+      <div class="row" style="margin:6px 0 12px"><button class="b sm" data-act="extraAdd">＋ 行を追加</button></div>
+    </div>
+    <div class="sec"><h3>動画</h3>
+      <label class="row" style="margin-bottom:8px;gap:8px"><input type="checkbox" data-path="${p}.showVideo" data-bool ${w.showVideo ? 'checked' : ''}> 動画リンクとQRコードを載せる</label>
+      ${w.showVideo ? fld(p + '.videoUrl', '動画URL（QRコードは自動で作られます）', {type:'url', ph:'https://youtu.be/...'}) : ''}</div>
+    <div class="sec"><h3>詳細ページ（${w.details.length}ページ）</h3>
+      ${w.details.map((d, di) => `<div class="card"><h4><span>詳細 ${di + 1}</span><span class="row" style="gap:0"><button class="ib" data-act="dUp" data-di="${di}" title="前へ">▲</button><button class="ib" data-act="dDown" data-di="${di}" title="後ろへ">▼</button><button class="ib" data-act="dDel" data-di="${di}" title="このページを削除">🗑</button></span></h4>
+        <div class="row" style="margin-bottom:8px"><label class="f grow" style="margin:0"><span>レイアウト</span><select data-path="${p}.details.${di}.layout" data-struct>${Object.entries(LAYOUTS).map(([k, l]) => `<option value="${k}" ${d.layout === k ? 'selected' : ''}>${l.label}</option>`).join('')}</select></label>
+        <label class="f grow" style="margin:0"><span>右上の見出し</span><input type="text" data-path="${p}.details.${di}.label" value="${esc(d.label || 'BREAKDOWN')}"></label></div>
+        ${di > 0 ? fld(`${p}.details.${di}.note`, '左側のメモ（空なら画像が全幅）', {rows:2}) : ''}
+        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"></div>`; }).join('')}</div></div>`).join('')}
+      <button class="b sm" data-act="dAdd">＋ 詳細ページを追加</button></div>
+    <div class="sec row wrap"><button class="b sm" data-act="dupBlock">この作品を複製</button><button class="b sm danger" data-act="delBlock">この作品を削除</button></div>`;
+}
+function panelAssets(){
+  const uses = imgUseCount();
+  const ids = Object.keys(IM);
+  return `<div class="sec"><h3>要素を追加</h3><div class="hint">追加先：クリックしたページ（ページ名の横に「← 追加先」と出ます）</div>
+      <div class="g2"><button class="b" data-add="text">T テキスト</button><button class="b" data-add="image">▣ 画像枠</button><button class="b" data-add="rect">■ 図形</button><button class="b" data-add="line">― 線</button></div></div>
+    <div class="sec"><h3><span>画像ライブラリ（${ids.length}）</span><button class="b sm" data-act="upload">＋ 画像を読み込む</button></h3>
+      <div class="hint">ページや画像枠にドラッグすると入ります。クリックで追加先のページに配置。数字は使われている回数です。</div>
+      <div class="lib">${ids.map(id => `<div class="li" draggable="true" data-img="${id}" title="${id}"><img src="${src(id)}" alt="">${uses[id] ? `<span class="u">×${uses[id]}</span>` : ''}${!uses[id] ? `<button class="x" data-delimg="${id}" title="ライブラリから削除">✕</button>` : ''}</div>`).join('')}</div></div>
+    <div class="sec"><h3>自動テキスト</h3><div class="hint">テキストに次の言葉を書くと、プロフィールの内容に置き換わります。プロフィールを直せば全ページに反映されます。</div>
+      <div class="keys">${TOKENS.map(([k, l]) => `<kbd>{${k}}</kbd><span>${l}</span>`).join('')}<kbd>**文字**</kbd><span>アクセント色にする</span><kbd>[文字]</kbd><span>未記入マーク（赤字＋チェック対象）</span></div></div>`;
+}
+function panelProfile(){
+  const p = 'profile';
+  return `<div class="sec"><h3>基本情報</h3><div class="hint">ここで直すと、表紙やプロフィールページなど {name} を使っている全ての場所に反映されます。</div>
+    ${fld(p + '.name', '氏名 {name}')}${fld(p + '.kana', 'ふりがな {kana}')}${fld(p + '.romaji', 'ローマ字 {romaji}')}${fld(p + '.school', '所属 {school}')}${fld(p + '.email', '連絡先 {email}')}
+    ${fld(p + '.position', '志望職種 {position}')}<label class="f" style="margin-bottom:4px"><span>使用できるツール {tools}</span></label>${chips('profile.toolList', ST().software, P.profile.toolList, `<button class="chip add" data-addlist="settings.software" data-also="profile.toolList">＋ 追加</button>`)}${pv(profileTools())}${fld(p + '.roles', '肩書き {roles}（表紙用・改行できます）', {rows:3})}${fld(p + '.intro', '自己紹介', {rows:4})}</div>
+    <div class="sec"><h3>その他</h3>${fld(p + '.coverLabel', '小見出し {label}（各ページ下にも出ます）')}${fld(p + '.year', '年 {year}')}</div>`;
+}
+function panelDesign(){
+  const fonts = [...new Set([...GOOGLE_FONTS, ...localFonts])];
+  return `<div class="sec"><h3>配色テーマ</h3><div class="row wrap" style="margin-bottom:10px">${Object.keys(THEMES).map(k => `<button class="b sm ${P.theme.preset === k ? 'on' : ''}" data-act="theme" data-k="${k}">${THEME_NAMES[k]}</button>`).join('')}</div>
+      <div class="swatches">${[['accent','アクセント'],['bg','背景'],['ink','文字'],['muted','補助文字'],['line','罫線'],['panel','パネル']].map(([k, l]) => `<label><input type="color" data-path="theme.${k}" value="${esc(P.theme[k])}">${l}</label>`).join('')}</div>
+      <div class="hint">「テーマ」で指定した色は、ここを変えると全ページで一斉に変わります。</div></div>
+    <div class="sec"><h3>フォント</h3>
+      <div class="hint">PCに入っているフォント名をそのまま入力しても使えます。PDFにもそのまま入ります。</div>
+      <button class="b sm" data-act="localFonts" style="margin-bottom:10px">PCのフォント一覧を読み込む${localFonts.length ? `（${localFonts.length}件）` : ''}</button>
+      ${fld('theme.headingFont', '見出しフォント（欧文向き）', {list:'fontlist'})}
+      <label class="row" style="margin:-4px 0 12px;gap:8px"><input type="checkbox" data-path="theme.expanded" data-bool ${P.theme.expanded ? 'checked' : ''}> 見出しを横長にする（Archivoなど対応フォントのみ）</label>
+      ${fld('theme.bodyFont', '本文フォント（和文）', {list:'fontlist'})}${fld('theme.monoFont', '等幅フォント（データ・番号）', {list:'fontlist'})}
+      <div class="hint">プレビュー：<span style="font-family:${esc(fontStack(P.theme.headingFont, 'sans-serif'))};font-size:18px;color:var(--ui-ink)">Aa あア 01</span></div></div>
+    ${panelFormat()}`;
+}
+function olist(path, items, labelOf, opts = {}){
+  return `<div class="olist">${items.map((k, idx) => `<div class="oi">${opts.toggle ? `<input type="checkbox" ${!opts.off.includes(k) ? 'checked' : ''} data-chipinv="${opts.toggle}" data-val="${esc(k)}" title="表示する">` : ''}<span class="t">${esc(labelOf(k))}</span>
+    <button class="ib" data-mv="${path}" data-idx="${idx}" data-dir="-1" title="上へ">▲</button><button class="ib" data-mv="${path}" data-idx="${idx}" data-dir="1" title="下へ">▼</button>${opts.del ? `<button class="ib" data-rm="${path}" data-idx="${idx}" title="一覧から削除">✕</button>` : ''}</div>`).join('')}</div>`;
+}
+function panelFormat(){
+  const S = ST();
+  return `<div class="sec"><h3>詳細ページの書式（全作品共通）</h3>
+      <label class="f" style="margin-bottom:4px"><span>左側の並び順</span></label>${olist('settings.leftOrder', S.leftOrder, k => LEFT_PARTS[k])}
+      <label class="f" style="margin-bottom:4px"><span>作品情報の項目（順番と表示）</span></label>${olist('settings.fieldOrder', S.fieldOrder, k => FIELDS[k].ui + (FIELDS[k].en ? `（${FIELDS[k][S.labelLang]}）` : ''), {toggle:'settings.fieldOff', off:S.fieldOff})}
+      <div class="row" style="margin-bottom:10px"><span class="mini" style="margin:0 6px 0 0">見出し</span>${[['en', 'TOOLS（英語）'], ['ja', '使用ツール（日本語）']].map(([k, l]) => `<button class="chip ${S.labelLang === k ? 'on' : ''}" data-setv="settings.labelLang" data-val="${k}">${l}</button>`).join('')}</div>
+      <div class="g2"><label class="f"><span>日付の書き方</span><select data-path="settings.dateFormat" data-struct>${Object.entries(DATE_FORMATS).map(([k, l]) => `<option value="${k}" ${S.dateFormat === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="f"><span>ツールの区切り</span><select data-path="settings.toolSep" data-struct>${Object.entries(SEPS).map(([k, l]) => `<option value="${esc(k)}" ${S.toolSep === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div>
+      <label class="row" style="gap:8px;margin-bottom:6px"><input type="checkbox" data-path="settings.halfWidth" data-bool ${S.halfWidth ? 'checked' : ''}> 全角の英数字を自動で半角にする（全ページ）</label>
+      <label class="row" style="gap:8px;margin-bottom:10px"><input type="checkbox" data-path="settings.heroAutoTags" data-bool ${S.heroAutoTags ? 'checked' : ''}> 扉ページのタグを自動で作る</label></div>
+    <div class="sec"><h3>ツールの一覧（この順で表示されます）</h3>${olist('settings.software', S.software, k => k, {del:true})}<button class="b sm" data-addlist="settings.software">＋ ツールを追加</button></div>
+    <div class="sec"><h3>担当範囲の一覧（この順で表示されます）</h3>${olist('settings.roleList', S.roleList, k => k, {del:true})}<button class="b sm" data-addlist="settings.roleList">＋ 項目を追加</button></div>`;
+}
+function issues(){
+  const M = buildPages(); const out = [];
+  const ph = s => (String(s || '').match(/\[[^\]\n]*\]/g) || []);
+  const push = (bi, where, msg, kind) => out.push({bi, where, msg, kind:kind || '未記入'});
+  const pr = P.profile; ['name', 'kana', 'romaji', 'school', 'email', 'position', 'intro', 'roles'].forEach(k => ph(pr[k]).forEach(x => push(-1, 'プロフィール', x)));
+  P.blocks.forEach((b, bi) => {
+    if (!b.enabled) return;
+    const elsCheck = (els, where) => (els || []).forEach(e => { if (e.hidden) return; if (e.type === 'text') ph(e.text.content).forEach(x => push(bi, where, x)); if (e.type === 'image' && !resolveImg(e.image.src, M)) push(bi, where, `画像「${e.name || '画像'}」が空です`, '画像'); });
+    if (b.type === 'free') elsCheck(b.elements, b.name || '自由ページ');
+    if (b.type === 'profile') elsCheck(b.extras, 'プロフィール');
+    if (b.type === 'work'){
+      const n = b.title;
+      ['title', 'subtitle', 'desc'].forEach(k => ph(b[k]).forEach(x => push(bi, n, x)));
+      const i = b.info, S = ST(), on = k => !S.fieldOff.includes(k);
+      if (on('tools') && !i.tools.length) push(bi, n, '使用ツールが選ばれていません', '情報');
+      if (on('date') && !i.date.y) push(bi, n, '制作時期が未設定です', '情報');
+      if (on('category') && !i.category && !i.categoryNote && !i.team) push(bi, n, '制作区分が未設定です', '情報');
+      if (on('roles') && !i.roles.length && !i.roleNote) push(bi, n, '担当範囲が未設定です', '情報');
+      if (b.showVideo && !+i.length) push(bi, n, '尺（秒）が未入力です', '情報');
+      if (i.kind === 'MODELING' && on('poly') && !+i.poly.count) push(bi, n, 'ポリゴン数が未入力です', '情報');
+      [i.categoryNote, i.roleNote].forEach(v => ph(v).forEach(x => push(bi, n, x)));
+      (i.extra || []).forEach(m => ph(m.v).forEach(x => push(bi, n, `${m.k}: ${x}`)));
+      if (!b.hero || !IM[b.hero]) push(bi, n, 'メイン画像が空です', '画像');
+      if (b.showVideo && !b.videoUrl) push(bi, n, '動画URLが未入力です', '動画');
+      b.details.forEach((d, di) => { const L = LAYOUTS[d.layout] || LAYOUTS.g6; for (let k = 0; k < L.n; k++){ const c = d.cells[k]; if (!c || !c.img || !IM[c.img]) push(bi, `${n} 詳細${di + 1}`, `画像「${c?.cap || k + 1}」が空です`, '画像'); } ph(d.note).forEach(x => push(bi, n, x)); elsCheck(d.extras, `${n} 詳細${di + 1}`); });
+      elsCheck(b.heroExtras, n);
+    }
+  });
+  return out;
+}
+function sizeMB(){ let bytes = 0; usedImageIds().forEach(id => { if (IM[id]) bytes += IM[id].length * 0.75; }); return bytes / 1048576; }
+function panelFile(){
+  const fsOK = 'showDirectoryPicker' in window; const iss = issues(); const mb = sizeMB();
+  return `<div class="sec"><h3>提出前チェック</h3>
+      <div class="issue ${mb < 40 ? 'ok' : ''}"><span class="tag">容量</span><span>画像の合計 約 ${mb.toFixed(1)} MB（上限 50MB）${mb >= 40 ? ' — 上限に近いので画像を減らすか小さくしてください' : ''}</span></div>
+      ${iss.length ? iss.map(x => `<div class="issue" data-goto="${x.bi}"><span class="tag">${x.kind}</span><span><b>${esc(x.where)}</b>　${esc(x.msg)}</span></div>`).join('') : `<div class="issue ok"><span class="tag">OK</span><span>未記入・空の画像はありません</span></div>`}</div>
+    <div class="sec"><h3>PDF</h3><button class="b pri" data-act="pdf">PDFに書き出す</button>
+      <div class="hint">印刷画面で：送信先「PDFに保存」／余白「なし」／「背景のグラフィック」にチェック。</div></div>
+    <div class="sec"><h3>プロジェクトフォルダ</h3>
+      ${fsOK ? (folderReady ? `<div class="hint">接続中：<b style="color:var(--ui-ink)">${esc(dirHandle.name)}</b><br>編集内容は自動でこのフォルダに保存されます。別のPCやClaudeが変更すると、数秒で自動的に読み込みます。</div>
+        <div class="row wrap"><button class="b sm" data-act="saveDir">今すぐ保存 (Ctrl+S)</button><button class="b sm" data-act="reloadDir">フォルダから再読み込み</button><button class="b sm" data-act="openDir">別のフォルダに切り替え</button></div>`
+        : `<div class="hint">フォルダに接続すると、自動保存・PC間の共有・Claudeとの共同編集ができます。</div><div class="row wrap"><button class="b pri sm" data-act="openDir">フォルダに接続</button></div>`)
+        : `<div class="hint">このブラウザはフォルダ保存に対応していません。Chrome / Edge / Vivaldi などで開いてください。</div>`}
+      <div class="hint" style="margin-top:10px">ツールのバージョン：${APP_VERSION}</div></div>
+    <div class="sec"><h3>1ファイルで保存</h3><div class="row wrap"><button class="b sm" data-act="exportJson">書き出す (.json)</button><button class="b sm" data-act="importJson">読み込む</button></div><div class="hint">画像ごと1ファイルにまとまります。</div></div>
+    <div class="sec"><h3>リセット</h3><button class="b sm danger" data-act="reset">最初の状態に戻す</button></div>`;
+}
+function renderSide(){
+  renderTabs(); const st = $('#panel').scrollTop;
+  $('#panel').innerHTML = (tab === 'pages' ? panelPages() : tab === 'assets' ? panelAssets() : tab === 'profile' ? panelProfile() : tab === 'design' ? panelDesign() : panelFile())
+    + `<datalist id="fontlist">${[...new Set([...GOOGLE_FONTS, ...localFonts])].map(f => `<option value="${esc(f)}">`).join('')}</datalist>`;
+  $('#panel').scrollTop = st; setStatus();
+}
+function renderAll(){ renderSide(); renderPages(); renderInsp(); }
+function setStatus(){
+  const s = $('#status'); if (!s) return;
+  if (!folderReady){ s.innerHTML = 'このブラウザに保存中<br><span style="color:var(--ui-acc)">フォルダ未接続</span>'; return; }
+  const t = savedAt ? `${pad2(savedAt.getHours())}:${pad2(savedAt.getMinutes())}` : '';
+  s.innerHTML = `☁ ${esc(dirHandle.name)}<br>${saving ? '保存中…' : dirty ? '変更あり' : t ? `保存済み ${t}` : '同期済み'}　v${APP_VERSION}`;
+}
+function updTodo(){ const n = issues().length; $('#todo').innerHTML = n ? `要確認 <b>${n}</b> 件` : '要確認 0 件 ✓'; }
+$('#todo').addEventListener('click', () => { tab = 'file'; renderAll(); });
+
+// left panel events
+const panel = $('#panel');
+panel.addEventListener('input', e => {
+  const el = e.target; const path = el.dataset.path; if (!path) return;
+  if (el.dataset.colorsel !== undefined){ setPath(path, el.value === '__custom' ? '#FFFFFF' : el.value); return changed(true); }
+  if (path.endsWith('.info.kind') && el.value === 'CUSTOM'){ setPath(path, 'NEW KIND'); return changed(true); }
+  if (el.dataset.numnull !== undefined){ setPath(path, el.value === '' ? null : +el.value); return changed(true); }
+  let v = el.type === 'checkbox' ? el.checked : el.value; if (el.dataset.num !== undefined) v = +v;
+  setPath(path, v);
+  if (path.startsWith('theme.') && el.type === 'color') P.theme.preset = 'custom';
+  if (el.dataset.bool !== undefined || el.dataset.struct !== undefined) return changed(true);
+  changed(false);
+  if (/^blocks\.\d+\.(title|name)$/.test(path)){ const t = document.querySelector(`.bitem[data-i="${selBlock}"] .t`); if (t) t.textContent = v; }
+});
+panel.addEventListener('click', async e => {
+  const ch = e.target.closest('[data-chip]'); if (ch){ const arr = getPath(ch.dataset.chip) || []; const v = ch.dataset.val; setPath(ch.dataset.chip, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
+  const ci = e.target.closest('[data-chipinv]'); if (ci){ const arr = getPath(ci.dataset.chipinv) || []; const v = ci.dataset.val; setPath(ci.dataset.chipinv, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
+  const sv = e.target.closest('[data-setv]'); if (sv){ setPath(sv.dataset.setv, sv.dataset.val); return changed(true); }
+  const mvb = e.target.closest('[data-mv]'); if (mvb){ const arr = getPath(mvb.dataset.mv); const i0 = +mvb.dataset.idx, i1 = i0 + (+mvb.dataset.dir); if (i1 >= 0 && i1 < arr.length){ [arr[i0], arr[i1]] = [arr[i1], arr[i0]]; changed(true); } return; }
+  const rmb = e.target.closest('[data-rm]'); if (rmb){ const arr = getPath(rmb.dataset.rm); const v = arr[+rmb.dataset.idx]; if (!confirm(`「${v}」を一覧から削除しますか？（作品で選んでいる場合はそこからも外れます）`)) return; arr.splice(+rmb.dataset.idx, 1);
+    P.blocks.forEach(b => { if (b.type === 'work'){ b.info.tools = b.info.tools.filter(x => x !== v); b.info.roles = b.info.roles.filter(x => x !== v); } }); P.profile.toolList = (P.profile.toolList || []).filter(x => x !== v); return changed(true); }
+  const al = e.target.closest('[data-addlist]'); if (al){ const name = (prompt('追加する名前を入力してください') || '').trim(); if (!name) return; const list = getPath(al.dataset.addlist); if (!list.includes(name)) list.push(name); if (al.dataset.also){ const a = getPath(al.dataset.also) || []; if (!a.includes(name)) setPath(al.dataset.also, [...a, name]); } return changed(true); }
+  const clr = e.target.closest('[data-clear]'); if (clr){ e.stopPropagation(); setPath(clr.dataset.clear, ''); return changed(true); }
+  const pk = e.target.closest('[data-pick]'); if (pk && !e.target.closest('button')) return pickImage(id => setImageAt(pk.dataset.pick, id));
+  const go = e.target.closest('[data-goto]'); if (go){ const bi = +go.dataset.goto; if (bi >= 0){ selBlock = bi; tab = 'pages'; renderAll(); scrollToBlock(bi); } else { tab = 'profile'; renderAll(); } return; }
+  const add = e.target.closest('[data-add]'); if (add) return addByType(add.dataset.add);
+  if (e.target.closest('#addFreeBtn')) return openFreeMenu(e.target.closest('#addFreeBtn'));
+  const li = e.target.closest('.li'); const di = e.target.closest('[data-delimg]');
+  if (di){ e.stopPropagation(); delete IM[di.dataset.delimg]; persist(); renderSide(); return; }
+  if (li){ const id = li.dataset.img; const r = await imgRatio(id); const w = 480, h = Math.round(w / r); return addElement(ACTIVE, E('image', Math.round(PW / 2 - w / 2), Math.round(PH / 2 - h / 2), w, h, {name:'画像', image:{src:id, fit:'cover', px:50, py:50, radius:0, gray:false}})); }
+  const item = e.target.closest('.bitem'); const b = e.target.closest('[data-act]');
+  if (!b){ if (item){ selBlock = +item.dataset.i; renderAll(); scrollToBlock(selBlock); } return; }
+  const a = b.dataset.act, i = b.dataset.i != null ? +b.dataset.i : selBlock, B = P.blocks, cur = B[selBlock];
+  const mv = (arr, from, to) => { if (to < 0 || to >= arr.length) return false; arr.splice(to, 0, arr.splice(from, 1)[0]); return true; };
+  switch (a){
+    case 'up': if (mv(B, i, i - 1)) selBlock = i - 1; break;
+    case 'down': if (mv(B, i, i + 1)) selBlock = i + 1; break;
+    case 'toggle': B[i].enabled = !B[i].enabled; break;
+    case 'addWork': B.splice(selBlock + 1, 0, newWork()); selBlock++; break;
+    case 'dupBlock': { const c = clone(cur); c.id = uid('b'); if (c.type === 'work') c.title += '（コピー）'; else c.name = (c.name || '') + '（コピー）'; const reid = els => (els || []).forEach(x => x.id = uid('e')); reid(c.elements); reid(c.heroExtras); (c.details || []).forEach(d => reid(d.extras)); B.splice(selBlock + 1, 0, c); selBlock++; break; }
+    case 'delBlock': if (!confirm(`「${cur.type === 'work' ? cur.title : cur.name}」を削除しますか？（↶ で取り消せます）`)) return; B.splice(selBlock, 1); if (!B.length) B.push(newWork()); selBlock = Math.min(selBlock, B.length - 1); SEL = {ctx:null, ids:[]}; break;
+    case 'extraAdd': cur.info.extra.push({k:'', v:''}); break;
+    case 'extraDel': cur.info.extra.splice(+b.dataset.mi, 1); break;
+    case 'dAdd': cur.details.push({layout:'g4', label:'BREAKDOWN', note:'', extras:[], cells:Array.from({length:4}, () => ({img:'', cap:''}))}); break;
+    case 'dDel': if (!confirm('この詳細ページを削除しますか？')) return; cur.details.splice(+b.dataset.di, 1); SEL = {ctx:null, ids:[]}; break;
+    case 'dUp': mv(cur.details, +b.dataset.di, +b.dataset.di - 1); SEL = {ctx:null, ids:[]}; break;
+    case 'dDown': mv(cur.details, +b.dataset.di, +b.dataset.di + 1); SEL = {ctx:null, ids:[]}; break;
+    case 'theme': Object.assign(P.theme, THEMES[b.dataset.k], {preset:b.dataset.k}); break;
+    case 'localFonts': return loadLocalFonts();
+    case 'upload': $('#multiPick').value = ''; return $('#multiPick').click();
+    case 'saveDir': return saveToDir();
+    case 'openDir': return openDir();
+    case 'reloadDir': return loadFromDir(dirHandle);
+    case 'exportJson': return exportJson();
+    case 'importJson': $('#jsonPick').value = ''; return $('#jsonPick').click();
+    case 'pdf': return doPrint();
+    case 'reset': if (!confirm('最初の状態に戻しますか？（↶ で取り消せます）')) return; P = defaultProject(); IM = {...IM, ...DEFAULT_IMAGES}; selBlock = 0; SEL = {ctx:null, ids:[]}; break;
+    default: return;
+  }
+  changed(true);
+});
+function openFreeMenu(btn){
+  closeMenu(); const r = btn.getBoundingClientRect();
+  const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu'; m.style.left = r.left + 'px'; m.style.top = (r.bottom + 4) + 'px';
+  m.innerHTML = [['blank','白紙','何もないページ'],['section','セクション扉','大見出しで章を区切る'],['full','全面画像','1枚の画像を大きく見せる'],['text','テキストページ','自己PRや制作の考え方など']].map(([k, l, s]) => `<button data-free="${k}">${l}<small>${s}</small></button>`).join('');
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { const b = e.target.closest('[data-free]'); if (!b) return; const t = freeTemplate(b.dataset.free); P.blocks.splice(selBlock + 1, 0, {id:uid('b'), type:'free', enabled:true, ...t}); selBlock++; closeMenu(); changed(true); scrollToBlock(selBlock); });
+  setTimeout(() => document.addEventListener('pointerdown', menuAway), 0);
+}
+function openTokMenu(btn){
+  closeMenu(); const r = btn.getBoundingClientRect();
+  const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu'; m.style.left = r.left + 'px'; m.style.top = (r.bottom + 4) + 'px';
+  m.innerHTML = TOKENS.map(([k, l]) => `<button data-tok="${k}">${l}<small>{${k}}</small></button>`).join('');
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { const b = e.target.closest('[data-tok]'); if (!b) return; closeMenu(); const k = b.dataset.tok; const mono = ['page', 'total', 'year', 'label', 'romaji'].includes(k);
+    addElement(ACTIVE, E('text', PW / 2 - 200, PH / 2 - 20, 400, 40, {name:TOKENS.find(t => t[0] === k)[1], text:T(k === 'page' ? '{page} / {total}' : `{${k}}`, mono ? {font:'mono', size:14, weight:400, color:'muted', ls:0.06} : {size:24})})); });
+  setTimeout(() => document.addEventListener('pointerdown', menuAway), 0);
+}
+function menuAway(e){ if (!e.target.closest('#menu')) closeMenu(); }
+function closeMenu(){ const m = $('#menu'); if (m) m.remove(); document.removeEventListener('pointerdown', menuAway); }
+function scrollToBlock(bi){ requestAnimationFrame(() => requestAnimationFrame(() => { const el = document.querySelector(`.pbox[data-bi="${bi}"]`); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); })); }
+// left panel drag & drop
+panel.addEventListener('dragstart', e => {
+  const li = e.target.closest('.li'); if (li){ e.dataTransfer.setData('text/x-img', li.dataset.img); e.dataTransfer.effectAllowed = 'copy'; return; }
+  const it = e.target.closest('.bitem'); if (it){ dragFrom = +it.dataset.i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/x-block', it.dataset.i); }
+});
+let dragFrom = null;
+panel.addEventListener('dragover', e => {
+  const types = [...e.dataTransfer.types];
+  const d = e.target.closest('[data-pick]'); if (d && (types.includes('Files') || types.includes('text/x-img'))){ e.preventDefault(); d.classList.add('over'); return; }
+  const it = e.target.closest('.bitem'); if (it && dragFrom != null){ e.preventDefault(); document.querySelectorAll('.bitem.dragover').forEach(x => x.classList.remove('dragover')); it.classList.add('dragover'); }
+});
+panel.addEventListener('dragleave', e => { const d = e.target.closest('[data-pick]'); if (d) d.classList.remove('over'); });
+panel.addEventListener('drop', async e => {
+  const d = e.target.closest('[data-pick]');
+  if (d){ const {file, lib} = dropInfo(e); if (file || lib){ e.preventDefault(); return setImageAt(d.dataset.pick, lib || file); } }
+  const it = e.target.closest('.bitem');
+  if (it && dragFrom != null){ e.preventDefault(); const to = +it.dataset.i; const B = P.blocks; const selId = B[selBlock]?.id; B.splice(to, 0, B.splice(dragFrom, 1)[0]); selBlock = B.findIndex(b => b.id === selId); if (selBlock < 0) selBlock = to; dragFrom = null; SEL = {ctx:null, ids:[]}; changed(true); }
+});
+panel.addEventListener('dragend', () => { dragFrom = null; document.querySelectorAll('.dragover').forEach(x => x.classList.remove('dragover')); });
+
+// =====================================================================
+//  fonts, folder, json, print
+// =====================================================================
+async function loadLocalFonts(){
+  if (!('queryLocalFonts' in window)){ toast('このブラウザでは一覧を読めません。フォント名を直接入力してください'); return; }
+  try { const fs = await window.queryLocalFonts(); localFonts = [...new Set(fs.map(f => f.family))].sort(); toast(`${localFonts.length} 個のフォントを読み込みました。入力欄の候補に出ます`); renderSide(); }
+  catch(e){ toast('フォントの読み込みが許可されませんでした'); }
+}
+async function saveToDir(){
+  if (folderReady){ await folderSave(); toast(`「${dirHandle.name}」に保存しました`); return; }
+  try { const h = await window.showDirectoryPicker({mode:'readwrite', id:'portfolio'}); await connectFolder(h); } catch(e){ if (e.name !== 'AbortError') toast('保存できませんでした：' + e.message); }
+}
+async function openDir(){ try { const h = await window.showDirectoryPicker({mode:'readwrite', id:'portfolio'}); await connectFolder(h); } catch(e){ if (e.name !== 'AbortError') toast('開けませんでした：' + e.message); } }
+async function loadFromDir(h, opt = {}){
+  try {
+    let fh; try { fh = await h.getFileHandle('project.json'); } catch(e){ toast('project.json がありません'); return; }
+    const file = await fh.getFile(); const data = JSON.parse(await file.text()); const map = data.images || {}; delete data.images;
+    for (const [id, rel] of Object.entries(map)){
+      if (IM[id]) continue; // image ids never change content
+      try { let d = h; const parts = rel.split('/'); for (const part of parts.slice(0, -1)) d = await d.getDirectoryHandle(part); const f = await (await d.getFileHandle(parts.at(-1))).getFile(); IM[id] = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); }); delete URLC[id]; } catch(e){ console.warn('missing image', rel); }
+    }
+    const keepSel = selBlock;
+    P = normalize(data); lastMtime = file.lastModified; dirty = false; savedAt = new Date(file.lastModified);
+    undoStack = []; redoStack = []; lastSnap = JSON.stringify(P);
+    selBlock = keepSel; afterLoad(false); hideBanner('conflict'); setStatus();
+    if (!opt.silent) toast(`「${h.name}」から読み込みました`);
+  } catch(e){ toast('読み込めませんでした：' + e.message); }
+}
+function exportJson(){
+  const images = {}; usedImageIds().forEach(id => { if (IM[id]) images[id] = IM[id]; });
+  const blob = new Blob([JSON.stringify({...P, embeddedImages:images})], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'portfolio-project.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+$('#jsonPick').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const data = JSON.parse(await f.text()); Object.assign(IM, data.embeddedImages || {}); delete data.embeddedImages; delete data.images; snapshot(); P = normalize(data); afterLoad(); snapshot(); toast('読み込みました'); } catch(err){ toast('読み込めませんでした'); }
+});
+function doPrint(){ if (EDITING) finishEdit(); setSel(null, []); toast('「PDFに保存」「余白なし」「背景のグラフィック」をオンにしてください'); setTimeout(() => window.print(), 350); }
+
+// toolbar
+$('#pdfBtn').addEventListener('click', doPrint);
+$('#undoBtn').addEventListener('click', undo);
+$('#redoBtn').addEventListener('click', redo);
+$('#toolbar').addEventListener('click', e => { const a = e.target.closest('[data-add]'); if (a) addByType(a.dataset.add); });
+$('#tokBtn').addEventListener('click', e => openTokMenu(e.currentTarget));
+$('#zoom').addEventListener('input', e => { zoom = +e.target.value; e.target.dataset.touched = '1'; renderPages(); });
+window.addEventListener('resize', () => { if (!$('#zoom').dataset.touched){ zoom = null; renderPages(); } });
+
+// =====================================================================
+//  boot
+// =====================================================================
+if (HOSTED && 'serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+(async function boot(){
+  await DB.open();
+  const saved = await DB.get('project'); const savedIm = await DB.get('images');
+  IM = {...DEFAULT_IMAGES, ...(savedIm || {})};
+  try { P = saved ? normalize(JSON.parse(saved)) : defaultProject(); } catch(e){ console.error(e); P = defaultProject(); }
+  try { const h = await DB.get('dir'); if (h) dirHandle = h; } catch(e){}
+  lastSnap = JSON.stringify(P);
+  renderAll(); persist(false);
+  await startFolder();
+  if (document.fonts) document.fonts.ready.then(() => renderPages());
+})();
+</script>
+</body>
+</html>
