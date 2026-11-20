@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.3.1">
+<meta name="app-version" content="2.4.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -98,8 +98,15 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 #toolbar .grp{display:flex;gap:4px;align-items:center;padding-right:8px;border-right:1px solid var(--ui-line)}
 #todo{font-size:12px;color:var(--ui-muted);cursor:pointer}
 #todo b{color:var(--ui-acc)}
-#pages{display:flex;flex-direction:column;align-items:center;gap:30px;padding:30px 20px 120px}
-.pbox{position:relative;flex-shrink:0;box-shadow:0 8px 30px #0008}
+#pages{display:flex;flex-direction:column;align-items:flex-start;gap:30px;padding:30px 20px 120px;width:max-content;min-width:100%;box-sizing:border-box}
+.pbox{position:relative;flex-shrink:0;box-shadow:0 8px 30px #0008;margin:0 auto}
+#zoomPct{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ui-ink);width:44px;text-align:right}
+.lb{position:fixed;inset:0;z-index:150;background:#000E;display:none;overflow:hidden;cursor:grab}
+.lb.show{display:block}
+.lb.drag{cursor:grabbing}
+.lb img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none;image-rendering:auto}
+.lb .bar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:#17181BEE;border:1px solid var(--ui-line);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--ui-muted);cursor:default}
+.lb .bar b{color:var(--ui-ink);font-family:'JetBrains Mono',monospace;font-weight:500;min-width:48px;text-align:right}
 .pbox .plabel{position:absolute;top:-21px;left:0;font-size:11px;color:var(--ui-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap}
 .pbox.act .plabel{color:var(--ui-acc)}
 .pbox.selb{outline:2px solid var(--ui-acc);outline-offset:4px}
@@ -223,7 +230,7 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
       </div>
       <span id="todo"></span>
       <span class="sp"></span>
-      <label class="row" style="gap:6px;color:var(--ui-muted);font-size:12px">表示 <input type="range" id="zoom" min="0.3" max="1.2" step="0.05" style="width:100px"></label>
+      <span class="row" style="gap:4px;color:var(--ui-muted);font-size:12px">表示 <button class="b sm" id="zoomOut" title="縮小">−</button><input type="range" id="zoom" min="0.2" max="4" step="0.05" style="width:110px"><button class="b sm" id="zoomIn" title="拡大">＋</button><span id="zoomPct"></span><button class="b sm" id="zoomFit" title="画面の幅に合わせる">全体</button><button class="b sm" id="zoom100" title="実寸（100%）">100%</button></span>
       <button class="b sm pri" id="pdfBtn">PDFに書き出す</button>
     </div>
     <div id="banner"></div>
@@ -235,6 +242,7 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 <input type="file" id="multiPick" accept="image/*" multiple hidden>
 <input type="file" id="jsonPick" accept=".json,application/json" hidden>
 <div class="toast" id="toast"></div>
+<div class="lb" id="lb"><img id="lbImg" alt=""><div class="bar"><span>ホイールで拡大縮小・ドラッグで移動</span><b id="lbPct"></b><button class="b sm" id="lbFit">全体</button><button class="b sm" id="lb100">等倍</button><button class="b sm" id="lbClose">閉じる (Esc)</button></div></div>
 <div class="gate" id="gate" style="display:none"><div class="box" id="gateBox"></div></div>
 
 <script>
@@ -268,7 +276,7 @@ const LEFT_PARTS = {desc:'説明文', meta:'作品情報（TYPE・TOOLSなど）
 const DATE_FORMATS = {jp:'2025年7月', dot:'2025.07', slash:'2025/07', en:'JUL 2025'};
 const SEPS = {' / ':'Blender / Maya', '、':'Blender、Maya', ' · ':'Blender · Maya', ', ':'Blender, Maya'};
 function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
-function defaultInfo(){ return {kind:'ANIMATION', length:0, category:'', categoryNote:'', team:'', teamSize:0, tools:[], date:{y:null, m:null, range:false, y2:null, m2:null}, roles:[], roleNote:'', poly:{count:0, unit:'tris'}, tex:{res:0, sets:1, maps:[]}, extra:[]}; }
+function defaultInfo(){ return {kind:'ANIMATION', length:0, category:'', categoryNote:'', team:'', teamSize:0, tools:[], date:{y:null, m:null, range:false, y2:null, m2:null}, roles:[], roleNote:'', poly:{count:0, unit:'tris', subd:0, count2:0}, tex:{res:0, sets:1, maps:[]}, extra:[]}; }
 const ST = () => P.settings;
 function toHalf(s){ return String(s ?? '').replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
 function orderBy(list, order){ return [...(list || [])].sort((a, b) => ((order.indexOf(a) + 1) || 999) - ((order.indexOf(b) + 1) || 999)); }
@@ -282,7 +290,9 @@ function fmtTools(arr){ return orderBy(arr, ST().software).join(ST().toolSep); }
 function fmtRoles(i){ const r = orderBy(i.roles, ST().roleList).join('、'); return [r, i.roleNote].filter(Boolean).join('\n'); }
 function fmtCategory(i){ const parts = []; if (i.category) parts.push(i.category + (i.categoryNote ? `（${i.categoryNote}）` : '')); else if (i.categoryNote) parts.push(i.categoryNote);
   if (i.team === 'solo') parts.push('個人制作'); if (i.team === 'team') parts.push(i.teamSize ? `チーム制作（${i.teamSize}人）` : 'チーム制作'); return parts.join('／'); }
-function fmtPoly(p){ return p && +p.count ? `${Number(p.count).toLocaleString('en-US')} ${p.unit}` : ''; }
+function fmtPoly(p){ if (!p) return ''; const n = v => Number(v).toLocaleString('en-US');
+  const base = +p.count ? `${n(p.count)} ${p.unit}` : ''; const sub = +p.subd ? `SubD Lv.${p.subd}${+p.count2 ? `（レンダー時 ${n(p.count2)} ${p.unit}）` : ''}` : (+p.count2 ? `レンダー時 ${n(p.count2)} ${p.unit}` : '');
+  if (base && sub) return `${base}（ベースメッシュ）\n${sub}`; return base || sub; }
 function fmtTex(t){ if (!t || !t.res) return ''; let s = `${t.res}×${t.res}`; if (+t.sets > 1) s += ` × ${t.sets}セット`; if (t.maps && t.maps.length) s += `\n${orderBy(t.maps, TEX_MAPS).join(' / ')}`; return s; }
 function fieldValue(k, i){ return k === 'category' ? fmtCategory(i) : k === 'tools' ? fmtTools(i.tools) : k === 'date' ? fmtDate(i.date) : k === 'length' ? fmtLen(i.length) : k === 'roles' ? fmtRoles(i) : k === 'poly' ? fmtPoly(i.poly) : k === 'tex' ? fmtTex(i.tex) : ''; }
 function metaRows(w){ const i = w.info, s = ST(), rows = [];
@@ -783,7 +793,16 @@ function doRenderPages(){
   if (EDITING){ const el = document.querySelector(`.el[data-eid="${EDITING}"]`); if (el && document.activeElement !== el){ el.focus(); placeCaretEnd(el); } }
   updTodo(); updUndo();
 }
-function getZoom(){ if (zoom == null){ const w = $('#stage').clientWidth - 60; zoom = Math.max(0.3, Math.min(1, Math.floor(w / PW * 20) / 20)); $('#zoom').value = zoom; } return zoom; }
+function fitZoom(){ const w = $('#stage').clientWidth - 60; return Math.max(0.2, Math.min(1, Math.floor(w / PW * 20) / 20)); }
+function getZoom(){ if (zoom == null){ zoom = fitZoom(); } $('#zoom').value = zoom; $('#zoomPct').textContent = Math.round(zoom * 100) + '%'; return zoom; }
+// zoom keeping the point under (cx, cy) in place
+function setZoom(z, cx, cy){
+  const st = $('#stage'); const old = getZoom(); z = Math.max(0.2, Math.min(4, Math.round(z * 100) / 100)); if (z === old) return;
+  const r = st.getBoundingClientRect(); const mx = (cx ?? r.left + st.clientWidth / 2) - r.left, my = (cy ?? r.top + st.clientHeight / 2) - r.top;
+  const k = z / old, sl = st.scrollLeft, stp = st.scrollTop;
+  zoom = z; $('#zoom').dataset.touched = '1'; doRenderPages();
+  st.scrollLeft = (sl + mx) * k - mx; st.scrollTop = (stp + my) * k - my;
+}
 function placeCaretEnd(el){ try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e){} }
 
 // =====================================================================
@@ -889,14 +908,15 @@ window.addEventListener('pointermove', e => {
 window.addEventListener('pointerup', () => { if (!DRAG) return; const moved = DRAG.moved; DRAG = null; if (moved){ persist(); snapshot(); drawSelection(); renderInsp(); } });
 // double click: edit text / pick image
 $('#pages').addEventListener('dblclick', e => {
-  const n = e.target.closest('.el'); if (!n) return;
+  const n = e.target.closest('.el');
+  if (!n){ const im = e.target.closest('img[data-drop]'); if (im) openLB(im.src); return; }
   const el = ctxEls(n.dataset.ctx).find(x => x.id === n.dataset.eid); if (!el || el.locked) return;
   if (el.type === 'text'){
     EDITING = el.id; setSel(n.dataset.ctx, [el.id]); doRenderPages();
     const node = document.querySelector(`.el[data-eid="${el.id}"]`);
     if (node){ node.focus(); try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null; const s = getSelection(); s.removeAllRanges(); if (r && node.contains(r.startContainer)) s.addRange(r); else placeCaretEnd(node); } catch(err){ placeCaretEnd(node); } }
   }
-  if (el.type === 'image'){ const ctx = n.dataset.ctx; pickImage(id => { const t = ctxEls(ctx).find(x => x.id === el.id); if (t){ t.image.src = id; changed(true); } }); }
+  if (el.type === 'image'){ const im = n.querySelector('img'); if (im) return openLB(im.src); const ctx = n.dataset.ctx; pickImage(id => { const t = ctxEls(ctx).find(x => x.id === el.id); if (t){ t.image.src = id; changed(true); } }); }
 });
 function finishEdit(){
   if (!EDITING) return; const node = document.querySelector(`.el[data-eid="${EDITING}"]`);
@@ -1172,9 +1192,12 @@ function workEditor(w, bi, no){
       <label class="f" style="margin-bottom:4px"><span>担当範囲</span></label>
       ${chips(q + '.roles', S.roleList, i.roles, `<button class="chip add" data-addlist="settings.roleList" data-also="${q}.roles">＋ 追加</button>`)}
       ${fld(q + '.roleNote', '担当の補足（任意・2行目に出ます）', {rows:2})}
-      <details ${(+i.poly.count || i.tex.res) ? 'open' : ''} style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--ui-muted);font-size:12px;margin-bottom:8px">モデリング情報（ポリゴン数・テクスチャ）</summary>
+      <details ${(+i.poly.count || +i.poly.subd || i.tex.res) ? 'open' : ''} style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--ui-muted);font-size:12px;margin-bottom:8px">モデリング情報（ポリゴン数・テクスチャ）</summary>
         <div class="g2"><label class="f"><span>ポリゴン数</span><input type="number" min="0" data-path="${q}.poly.count" data-num value="${+i.poly.count || ''}" placeholder="例：12000"></label>
         <label class="f"><span>単位</span><select data-path="${q}.poly.unit" data-struct>${['tris', 'polys', 'verts'].map(u => `<option ${i.poly.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></label></div>
+        <div class="hint" style="margin-top:-6px">上は細分化<b>前</b>（ベースメッシュ）の数。細分化している場合は下も入れてください。</div>
+        <div class="g2"><label class="f"><span>細分化レベル（SubD）</span><select data-path="${q}.poly.subd" data-numnull><option value="">なし</option>${[1, 2, 3, 4].map(l => `<option value="${l}" ${+i.poly.subd === l ? 'selected' : ''}>Lv.${l}</option>`).join('')}</select></label>
+        <label class="f"><span>細分化後の数（任意）</span><input type="number" min="0" data-path="${q}.poly.count2" data-num value="${+i.poly.count2 || ''}" placeholder="例：51200"></label></div>
         <div class="g2"><label class="f"><span>テクスチャ解像度</span><select data-path="${q}.tex.res" data-numnull><option value="">なし</option>${TEX_RES.map(r => `<option value="${r}" ${+i.tex.res === r ? 'selected' : ''}>${r}×${r}</option>`).join('')}</select></label>
         <label class="f"><span>セット数</span><input type="number" min="1" data-path="${q}.tex.sets" data-num value="${i.tex.sets || 1}"></label></div>
         ${chips(q + '.tex.maps', TEX_MAPS, i.tex.maps)}
@@ -1454,7 +1477,26 @@ $('#undoBtn').addEventListener('click', undo);
 $('#redoBtn').addEventListener('click', redo);
 $('#toolbar').addEventListener('click', e => { const a = e.target.closest('[data-add]'); if (a) addByType(a.dataset.add); });
 $('#tokBtn').addEventListener('click', e => openTokMenu(e.currentTarget));
-$('#zoom').addEventListener('input', e => { zoom = +e.target.value; e.target.dataset.touched = '1'; renderPages(); });
+$('#zoom').addEventListener('input', e => setZoom(+e.target.value));
+$('#zoomIn').addEventListener('click', () => setZoom(getZoom() * 1.25));
+$('#zoomOut').addEventListener('click', () => setZoom(getZoom() / 1.25));
+$('#zoomFit').addEventListener('click', () => { delete $('#zoom').dataset.touched; setZoom(fitZoom()); delete $('#zoom').dataset.touched; });
+$('#zoom100').addEventListener('click', () => setZoom(1));
+$('#stage').addEventListener('wheel', e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); setZoom(getZoom() * Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, {passive:false});
+// ---------- image viewer (lightbox) ----------
+const LB = {s:1, x:0, y:0, w:0, h:0, drag:null};
+function lbApply(){ const im = $('#lbImg'); im.style.transform = `translate(${LB.x}px,${LB.y}px) scale(${LB.s})`; $('#lbPct').textContent = Math.round(LB.s * 100) + '%'; }
+function lbFit(){ const W = innerWidth, H = innerHeight - 70; LB.s = Math.min(W / LB.w, H / LB.h, 1) * 0.96; LB.x = (W - LB.w * LB.s) / 2; LB.y = (H - LB.h * LB.s) / 2 + 10; lbApply(); }
+function lbZoom(s, cx, cy){ s = Math.max(0.05, Math.min(8, s)); cx = cx ?? innerWidth / 2; cy = cy ?? innerHeight / 2; LB.x = cx - (cx - LB.x) * s / LB.s; LB.y = cy - (cy - LB.y) * s / LB.s; LB.s = s; lbApply(); }
+function openLB(url){ if (!url) return; const im = $('#lbImg'); im.onload = () => { LB.w = im.naturalWidth; LB.h = im.naturalHeight; lbFit(); }; im.src = url; $('#lb').classList.add('show'); }
+function closeLB(){ $('#lb').classList.remove('show'); }
+$('#lb').addEventListener('wheel', e => { e.preventDefault(); lbZoom(LB.s * Math.exp(-e.deltaY * 0.0018), e.clientX, e.clientY); }, {passive:false});
+$('#lb').addEventListener('pointerdown', e => { if (e.target.closest('.bar')) return; LB.drag = {x:e.clientX - LB.x, y:e.clientY - LB.y}; $('#lb').classList.add('drag'); });
+window.addEventListener('pointermove', e => { if (!LB.drag) return; LB.x = e.clientX - LB.drag.x; LB.y = e.clientY - LB.drag.y; lbApply(); });
+window.addEventListener('pointerup', () => { LB.drag = null; $('#lb').classList.remove('drag'); });
+$('#lb').addEventListener('dblclick', e => { if (e.target.closest('.bar')) return; if (LB.s < 0.99) lbZoom(1, e.clientX, e.clientY); else lbFit(); });
+$('#lbFit').addEventListener('click', lbFit); $('#lb100').addEventListener('click', () => lbZoom(1)); $('#lbClose').addEventListener('click', closeLB);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#lb').classList.contains('show')){ e.stopImmediatePropagation(); closeLB(); } }, true);
 window.addEventListener('resize', () => { if (!$('#zoom').dataset.touched){ zoom = null; renderPages(); } });
 
 // =====================================================================
