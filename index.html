@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.7.1">
+<meta name="app-version" content="2.7.2">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -483,7 +483,7 @@ function persist(toFolder = true){
 }
 // ---------- folder sync (the folder is the source of truth) ----------
 const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '0';
-let folderReady = false, dirty = false, saving = false, saveAgain = false, lastMtime = 0, savedAt = null, folderTimer = null, conflictShown = false;
+let folderReady = false, dirty = false, saving = false, saveAgain = false, lastMtime = 0, lastText = null, savedAt = null, folderTimer = null, conflictShown = false;
 async function projFile(){ return (await dirHandle.getFileHandle('project.json')).getFile(); }
 async function folderSave(force){
   if (!dirHandle || !folderReady) return;
@@ -491,7 +491,8 @@ async function folderSave(force){
   saving = true; setStatus();
   try {
     let cur = null; try { cur = await projFile(); } catch(e){}
-    if (!force && cur && lastMtime && cur.lastModified > lastMtime + 1){ saving = false; showConflict(); return; }
+    // compare contents, not only timestamps (cloud drives can report stale timestamps)
+    if (!force && cur && lastText !== null){ const curText = await cur.text(); if (curText !== lastText){ saving = false; showConflict(); return; } }
     const imgDir = await dirHandle.getDirectoryHandle('images', {create:true}); const map = {};
     for (const id of usedImageIds()){
       const url = IM[id]; if (!url) continue;
@@ -501,8 +502,9 @@ async function folderSave(force){
       if (!exists){ const fh = await imgDir.getFileHandle(name, {create:true}); const ws = await fh.createWritable(); await ws.write(dataURLtoBlob(url)); await ws.close(); }
     }
     const fh = await dirHandle.getFileHandle('project.json', {create:true}); const ws = await fh.createWritable();
-    await ws.write(JSON.stringify({...P, images:map}, null, 2)); await ws.close();
-    lastMtime = (await fh.getFile()).lastModified; dirty = false; savedAt = new Date(); hideBanner('conflict');
+    const outText = JSON.stringify({...P, images:map}, null, 2);
+    await ws.write(outText); await ws.close();
+    lastText = outText; lastMtime = (await fh.getFile()).lastModified; dirty = false; savedAt = new Date(); hideBanner('conflict');
   } catch(e){ toast('フォルダに保存できませんでした：' + e.message); }
   saving = false; setStatus();
   if (saveAgain){ saveAgain = false; folderSave(); }
@@ -511,7 +513,8 @@ async function checkRemote(){
   if (!folderReady || saving || DRAG || EDITING || document.hidden) return;
   try {
     const f = await projFile();
-    if (f.lastModified > lastMtime + 1){
+    const changedRemote = f.lastModified > lastMtime + 1 || (lastText !== null && (await f.text()) !== lastText);
+    if (changedRemote){
       if (dirty) return showConflict();
       await loadFromDir(dirHandle, {silent:true}); toast('別のPC（またはClaude）の変更を読み込みました');
     }
@@ -1482,13 +1485,13 @@ async function openDir(){ try { const h = await window.showDirectoryPicker({mode
 async function loadFromDir(h, opt = {}){
   try {
     let fh; try { fh = await h.getFileHandle('project.json'); } catch(e){ toast('project.json がありません'); return; }
-    const file = await fh.getFile(); const data = JSON.parse(await file.text()); const map = data.images || {}; delete data.images;
+    const file = await fh.getFile(); const rawText = await file.text(); const data = JSON.parse(rawText); const map = data.images || {}; delete data.images;
     for (const [id, rel] of Object.entries(map)){
       if (IM[id]) continue; // image ids never change content
       try { let d = h; const parts = rel.split('/'); for (const part of parts.slice(0, -1)) d = await d.getDirectoryHandle(part); const f = await (await d.getFileHandle(parts.at(-1))).getFile(); IM[id] = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); }); delete URLC[id]; } catch(e){ console.warn('missing image', rel); }
     }
     const keepSel = selBlock;
-    P = normalize(data); lastMtime = file.lastModified; dirty = false; savedAt = new Date(file.lastModified);
+    P = normalize(data); lastMtime = file.lastModified; lastText = rawText; dirty = false; savedAt = new Date(file.lastModified);
     undoStack = []; redoStack = []; lastSnap = JSON.stringify(P);
     selBlock = keepSel; afterLoad(false); hideBanner('conflict'); setStatus();
     if (!opt.silent) toast(`「${h.name}」から読み込みました`);
