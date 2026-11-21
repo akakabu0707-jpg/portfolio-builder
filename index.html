@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.5.0">
+<meta name="app-version" content="2.6.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -149,7 +149,8 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .hero-band{height:162px;padding:0 48px;display:flex;align-items:center;gap:32px;border-top:2px solid var(--acc)}
 .hero-no{font-family:var(--fh);font-stretch:var(--stretch);font-weight:900;font-size:96px;line-height:1;color:var(--acc)}
 .hero-t{margin:0;line-height:1.05}
-.hero-t.lat{font-family:var(--fh);font-stretch:var(--stretch);font-weight:800;font-size:46px;letter-spacing:-.01em;text-transform:uppercase}
+.hero-t.lat{font-family:var(--fh);font-stretch:var(--stretch);font-weight:800;font-size:46px;letter-spacing:-.01em}
+.upper{text-transform:uppercase}
 .hero-t.jp{font-family:var(--fb);font-weight:900;font-size:40px;letter-spacing:.02em}
 .hero-tags{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:var(--fm);font-size:12px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
 .dbody{display:flex;gap:40px;align-items:flex-start}
@@ -279,7 +280,7 @@ const FIELDS = {category:{en:'TYPE', ja:'制作区分', ui:'制作区分'}, tool
 const LEFT_PARTS = {desc:'説明文', meta:'作品情報（TYPE・TOOLSなど）', video:'動画リンク・QR'};
 const DATE_FORMATS = {jp:'2025年7月', dot:'2025.07', slash:'2025/07', en:'JUL 2025'};
 const SEPS = {' / ':'Blender / Maya', '、':'Blender、Maya', ' · ':'Blender · Maya', ', ':'Blender, Maya'};
-function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, capStyle:'below', software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
+function defaultSettings(){ return {leftOrder:['desc', 'meta', 'video'], fieldOrder:['category', 'tools', 'date', 'length', 'roles', 'poly', 'tex', 'extra'], fieldOff:[], labelLang:'en', dateFormat:'jp', toolSep:' / ', halfWidth:true, heroAutoTags:true, capStyle:'below', titleUpper:false, software:[...SOFTWARE_DEFAULT], roleList:[...ROLE_DEFAULT]}; }
 function defaultInfo(){ return {kind:'ANIMATION', length:0, category:'', categoryNote:'', team:'', teamSize:0, tools:[], date:{y:null, m:null, range:false, y2:null, m2:null}, roles:[], roleNote:'', poly:{count:0, unit:'tris', subd:0, count2:0}, tex:{res:0, sets:1, maps:[]}, extra:[]}; }
 const ST = () => P.settings;
 function toHalf(s){ return String(s ?? '').replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
@@ -742,7 +743,7 @@ function renderHero(pg, M){
   return `<div class="page">
     <div class="hero-img">${slot(w.hero, `${p}.hero`, 'メイン画像', 'ここに画像をドロップ（16:9推奨）', `object-position:${w.heroX}% ${w.heroY}%`)}</div>
     <div class="hero-band"><span class="hero-no">${pg.no}</span>
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0"><h1 class="hero-t ${isJP(w.title) ? 'jp' : 'lat'}">${rich(w.title)}</h1><p class="muted" style="margin:0;font-size:15px">${rich(w.subtitle)}</p></div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0"><h1 class="hero-t ${isJP(w.title) ? 'jp' : 'lat'} ${ST().titleUpper ? 'upper' : ''}">${rich(w.title)}</h1><p class="muted" style="margin:0;font-size:15px">${rich(w.subtitle)}</p></div>
       <div class="hero-tags">${heroTags(w).map(t => `<span>${rich(t)}</span>`).join('')}<span style="margin-top:8px;color:var(--ink)">${pad2(pg.n)} / ${pad2(M.total)}</span></div>
     </div>${layerHTML(w.heroExtras, pg, M, pg.ctx)}</div>`;
 }
@@ -770,7 +771,7 @@ function renderDetail(pg, M){
   const left = pg.di === 0 ? `<div class="dleft">${ST().leftOrder.map(k => parts[k] ? parts[k]() : '').join('')}</div>`
     : (d.note ? `<div class="dleft"><p class="desc">${richBr(d.note)}</p></div>` : '');
   return `<div class="page pad">
-    <div class="hdr"><span class="exp" style="font-weight:800;font-size:20px;${isJP(w.title) ? '' : 'text-transform:uppercase'}"><span class="ph">${pg.no}</span>&nbsp;&nbsp;${rich(w.title)}</span><span class="mono muted" style="font-size:12px;letter-spacing:.12em">${esc(d.label || 'BREAKDOWN')}</span></div>
+    <div class="hdr"><span class="exp" style="font-weight:800;font-size:20px;${ST().titleUpper && !isJP(w.title) ? 'text-transform:uppercase' : ''}"><span class="ph">${pg.no}</span>&nbsp;&nbsp;${rich(w.title)}</span><span class="mono muted" style="font-size:12px;letter-spacing:.12em">${esc(d.label || 'BREAKDOWN')}</span></div>
     <div class="dbody">${left}<div class="grid ${d.layout in LAYOUTS ? d.layout : 'g6'}">${cells.join('')}</div></div>
     ${footer(pg.n, M)}${layerHTML(d.extras, pg, M, pg.ctx)}</div>`;
 }
@@ -1272,6 +1273,7 @@ function panelFormat(){
       <label class="f"><span>ツールの区切り</span><select data-path="settings.toolSep" data-struct>${Object.entries(SEPS).map(([k, l]) => `<option value="${esc(k)}" ${S.toolSep === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div>
       <label class="row" style="gap:8px;margin-bottom:6px"><input type="checkbox" data-path="settings.halfWidth" data-bool ${S.halfWidth ? 'checked' : ''}> 全角の英数字を自動で半角にする（全ページ）</label>
       <label class="row" style="gap:8px;margin-bottom:10px"><input type="checkbox" data-path="settings.heroAutoTags" data-bool ${S.heroAutoTags ? 'checked' : ''}> 扉ページのタグを自動で作る</label>
+      <div class="row" style="margin-bottom:10px;flex-wrap:wrap"><span class="mini" style="margin:0 6px 0 0">英語の作品タイトル</span>${[[false, '入力どおり（Rys-T Helmet）'], [true, 'すべて大文字（RYS-T HELMET）']].map(([k, l]) => `<button class="chip ${!!S.titleUpper === k ? 'on' : ''}" data-settog="settings.titleUpper" data-val="${k}">${l}</button>`).join('')}</div>
       <div class="row" style="margin-bottom:10px;flex-wrap:wrap"><span class="mini" style="margin:0 6px 0 0">画像のキャプション</span>${[['below', '画像の下'], ['overlay', '画像に重ねる'], ['none', '表示しない']].map(([k, l]) => `<button class="chip ${S.capStyle === k ? 'on' : ''}" data-setv="settings.capStyle" data-val="${k}">${l}</button>`).join('')}</div></div>
     <div class="sec"><h3>ツールの一覧（この順で表示されます）</h3>${olist('settings.software', S.software, k => k, {del:true})}<button class="b sm" data-addlist="settings.software">＋ ツールを追加</button></div>
     <div class="sec"><h3>担当範囲の一覧（この順で表示されます）</h3>${olist('settings.roleList', S.roleList, k => k, {del:true})}<button class="b sm" data-addlist="settings.roleList">＋ 項目を追加</button></div>`;
@@ -1356,6 +1358,7 @@ panel.addEventListener('input', e => {
 panel.addEventListener('click', async e => {
   const ch = e.target.closest('[data-chip]'); if (ch){ const arr = getPath(ch.dataset.chip) || []; const v = ch.dataset.val; setPath(ch.dataset.chip, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
   const ci = e.target.closest('[data-chipinv]'); if (ci){ const arr = getPath(ci.dataset.chipinv) || []; const v = ci.dataset.val; setPath(ci.dataset.chipinv, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
+  const stg = e.target.closest('[data-settog]'); if (stg){ setPath(stg.dataset.settog, stg.dataset.val === 'true'); return changed(true); }
   const sv = e.target.closest('[data-setv]'); if (sv){ setPath(sv.dataset.setv, sv.dataset.val); return changed(true); }
   const mvb = e.target.closest('[data-mv]'); if (mvb){ const arr = getPath(mvb.dataset.mv); const i0 = +mvb.dataset.idx, i1 = i0 + (+mvb.dataset.dir); if (i1 >= 0 && i1 < arr.length){ [arr[i0], arr[i1]] = [arr[i1], arr[i0]]; changed(true); } return; }
   const rmb = e.target.closest('[data-rm]'); if (rmb){ const arr = getPath(rmb.dataset.rm); const v = arr[+rmb.dataset.idx]; if (!confirm(`「${v}」を一覧から削除しますか？（作品で選んでいる場合はそこからも外れます）`)) return; arr.splice(+rmb.dataset.idx, 1);
