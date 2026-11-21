@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.6.0">
+<meta name="app-version" content="2.7.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -176,6 +176,7 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .widx{display:flex;gap:18px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
 .widx img,.widx .noimg{object-fit:cover;background:#000;flex-shrink:0}
 @media print{
+  .overflow-warn{outline:none!important}
   @page{size:1123px 794px;margin:0}
   html,body{background:none;height:auto;overflow:visible}
   #app{display:block;height:auto}
@@ -208,6 +209,7 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .olist .oi .t{flex:1}
 .preview{font-size:12px;color:var(--ui-ink);background:#0E0F11;border:1px solid var(--ui-line);border-radius:6px;padding:6px 8px;margin:-4px 0 10px;white-space:pre-wrap}
 .preview::before{content:'表示：';color:var(--ui-muted)}
+.overflow-warn{outline:3px dashed #e5484d;outline-offset:2px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--ui-line);color:var(--ui-ink);padding:9px 16px;border-radius:8px;font-size:13px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 .menu{position:absolute;z-index:40;background:var(--ui-bg);border:1px solid var(--ui-line);border-radius:8px;padding:4px;box-shadow:0 10px 30px #000a;min-width:200px}
@@ -799,7 +801,7 @@ function doRenderPages(){
   }).join('');
   drawSelection();
   if (EDITING){ const el = document.querySelector(`.el[data-eid="${EDITING}"]`); if (el && document.activeElement !== el){ el.focus(); placeCaretEnd(el); } }
-  updTodo(); updUndo();
+  checkOverflow(); updTodo(); updUndo();
 }
 function fitZoom(){ const w = $('#stage').clientWidth - 60; return Math.max(0.2, Math.min(1, Math.floor(w / PW * 20) / 20)); }
 function getZoom(){ if (zoom == null){ zoom = fitZoom(); } $('#zoom').value = zoom; $('#zoomPct').textContent = Math.round(zoom * 100) + '%'; return zoom; }
@@ -1313,6 +1315,7 @@ function panelFile(){
   const fsOK = 'showDirectoryPicker' in window; const iss = issues(); const mb = sizeMB();
   return `<div class="sec"><h3>提出前チェック</h3>
       <div class="issue ${mb < 40 ? 'ok' : ''}"><span class="tag">容量</span><span>画像の合計 約 ${mb.toFixed(1)} MB（上限 50MB）${mb >= 40 ? ' — 上限に近いので画像を減らすか小さくしてください' : ''}</span></div>
+      ${OVERFLOW.map(x => `<div class="issue" data-goto="${x.bi}"><span class="tag">はみ出し</span><span><b>${esc(x.where)}</b>　左側の文章がページの下にはみ出しています。説明文を短くするか、項目を減らしてください</span></div>`).join('')}
       ${iss.length ? iss.map(x => `<div class="issue" data-goto="${x.bi}"><span class="tag">${x.kind}</span><span><b>${esc(x.where)}</b>　${esc(x.msg)}</span></div>`).join('') : `<div class="issue ok"><span class="tag">OK</span><span>未記入・空の画像はありません</span></div>`}</div>
     <div class="sec"><h3>PDF</h3><button class="b pri" data-act="pdf">PDFに書き出す</button>
       <div class="hint">印刷画面で：送信先「PDFに保存」／余白「なし」／「背景のグラフィック」にチェック。</div></div>
@@ -1338,7 +1341,20 @@ function setStatus(){
   const t = savedAt ? `${pad2(savedAt.getHours())}:${pad2(savedAt.getMinutes())}` : '';
   s.innerHTML = `☁ ${esc(dirHandle.name)}<br>${saving ? '保存中…' : dirty ? '変更あり' : t ? `保存済み ${t}` : '同期済み'}　v${APP_VERSION}`;
 }
-function updTodo(){ const n = issues().length; $('#todo').innerHTML = n ? `要確認 <b>${n}</b> 件` : '要確認 0 件 ✓'; }
+let OVERFLOW = [];
+// text that runs past the footer (or off the page) on template pages
+function checkOverflow(){
+  OVERFLOW = [];
+  document.querySelectorAll('.pbox').forEach((box, idx) => {
+    const page = box.querySelector('.page.pad'); if (!page) return;
+    const foot = page.querySelector('.foot'); const left = page.querySelector('.dleft'); if (!foot || !left) return;
+    const z = getZoom(); const fb = foot.getBoundingClientRect(); const lb = left.getBoundingClientRect();
+    const over = lb.bottom > fb.top - 4 * z || left.scrollHeight > left.clientHeight + 2;
+    left.classList.toggle('overflow-warn', over);
+    if (over){ const pg = PAGES[idx]; if (pg) OVERFLOW.push({bi:pg.bi, where:pageLabel(pg)}); }
+  });
+}
+function updTodo(){ const n = issues().length + OVERFLOW.length; $('#todo').innerHTML = n ? `要確認 <b>${n}</b> 件` : '要確認 0 件 ✓'; }
 $('#todo').addEventListener('click', () => { tab = 'file'; renderAll(); });
 
 // left panel events
