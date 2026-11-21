@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.7.2">
+<meta name="app-version" content="2.8.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -485,8 +485,25 @@ function persist(toFolder = true){
 const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '0';
 let folderReady = false, dirty = false, saving = false, saveAgain = false, lastMtime = 0, lastText = null, savedAt = null, folderTimer = null, conflictShown = false;
 async function projFile(){ return (await dirHandle.getFileHandle('project.json')).getFile(); }
+// ---------- single-editor lock (prevents two windows / PCs overwriting each other) ----------
+const INSTANCE = Math.random().toString(36).slice(2, 10);
+let readOnly = false, lastBeat = 0;
+async function heartbeat(force){
+  if (!folderReady || (!force && Date.now() - lastBeat < 8000)) return; lastBeat = Date.now();
+  try {
+    const fh = await dirHandle.getFileHandle('.editing.json', {create:true});
+    let cur = {}; try { cur = JSON.parse(await (await fh.getFile()).text() || '{}'); } catch(e){}
+    const fresh = cur.id && cur.id !== INSTANCE && Date.now() - (cur.ts || 0) < 25000;
+    if (fresh && !force){ if (!readOnly){ readOnly = true; showBanner('lock', '別のウィンドウ（または別のPC）でこのプロジェクトを編集中です。こちらでは保存しません。', [['こちらで編集する', 'takeLock']]); setStatus(); } return; }
+    const ws = await fh.createWritable(); await ws.write(JSON.stringify({id:INSTANCE, ts:Date.now(), ua:navigator.platform})); await ws.close();
+    if (readOnly){ readOnly = false; hideBanner('lock'); setStatus(); }
+  } catch(e){}
+}
+async function releaseLock(){ try { if (!folderReady || readOnly) return; const fh = await dirHandle.getFileHandle('.editing.json'); const ws = await fh.createWritable(); await ws.write('{}'); await ws.close(); } catch(e){} }
+window.addEventListener('pagehide', releaseLock);
 async function folderSave(force){
   if (!dirHandle || !folderReady) return;
+  if (readOnly){ setStatus(); return; }
   if (saving){ saveAgain = true; return; }
   saving = true; setStatus();
   try {
@@ -547,6 +564,7 @@ function showConflict(){ if (bannerKind === 'conflict') return; showBanner('conf
 $('#banner').addEventListener('click', async e => {
   const a = e.target.closest('[data-ban]')?.dataset.ban; if (!a) return;
   if (a === 'loadRemote'){ dirty = false; hideBanner(); await loadFromDir(dirHandle, {silent:true}); toast('読み込みました'); }
+  if (a === 'takeLock'){ await heartbeat(true); await loadFromDir(dirHandle, {silent:true}); toast('このウィンドウで編集できるようにしました'); return; }
   if (a === 'overwrite'){ hideBanner(); await folderSave(true); toast('こちらの内容で保存しました'); }
   if (a === 'doUpdate'){
     if (dirty) await folderSave();
@@ -555,7 +573,7 @@ $('#banner').addEventListener('click', async e => {
     location.reload();
   }
 });
-setInterval(() => { checkRemote(); checkUpdate(); }, 3000);
+setInterval(() => { heartbeat(); checkRemote(); checkUpdate(); }, 3000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ lastUpdCheck = 0; checkRemote(); checkUpdate(); } });
 window.addEventListener('beforeunload', e => { if (dirty && folderReady){ folderSave(); e.preventDefault(); e.returnValue = ''; } });
 // ---------- startup gate ----------
@@ -565,6 +583,7 @@ async function connectFolder(h){
   let has = false; try { await h.getFileHandle('project.json'); has = true; } catch(e){}
   folderReady = true;
   if (has) await loadFromDir(h, {silent:true}); else { await folderSave(true); toast(`「${h.name}」に今の内容を保存しました。これからは自動で保存されます`); }
+  lastBeat = 0; await heartbeat();
   gate(''); renderSide(); setStatus();
 }
 async function startFolder(){
@@ -1347,7 +1366,7 @@ function setStatus(){
   const s = $('#status'); if (!s) return;
   if (!folderReady){ s.innerHTML = 'このブラウザに保存中<br><span style="color:var(--ui-acc)">フォルダ未接続</span>'; return; }
   const t = savedAt ? `${pad2(savedAt.getHours())}:${pad2(savedAt.getMinutes())}` : '';
-  s.innerHTML = `☁ ${esc(dirHandle.name)}<br>${saving ? '保存中…' : dirty ? '変更あり' : t ? `保存済み ${t}` : '同期済み'}　v${APP_VERSION}`;
+  s.innerHTML = `☁ ${esc(dirHandle.name)}<br>${readOnly ? '<span style="color:var(--ui-acc)">閲覧のみ（保存しない）</span>' : saving ? '保存中…' : dirty ? '変更あり' : t ? `保存済み ${t}` : '同期済み'}　v${APP_VERSION}`;
 }
 let OVERFLOW = [];
 // text that runs past the footer (or off the page) on template pages
