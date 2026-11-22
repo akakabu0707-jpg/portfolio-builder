@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.8.0">
+<meta name="app-version" content="2.9.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -526,6 +526,42 @@ async function folderSave(force){
   saving = false; setStatus();
   if (saveAgain){ saveAgain = false; folderSave(); }
 }
+// ---------- Claude inbox: Claude never writes project.json directly; it drops a file here and this tool applies it ----------
+function fnv(str){ let h = 0x811c9dc5; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
+let inboxBusy = false, inboxPending = null;
+async function loadImagesFromMap(map){
+  for (const [id, rel] of Object.entries(map || {})){
+    if (IM[id]) continue;
+    try { let d = dirHandle; const parts = rel.split('/'); for (const part of parts.slice(0, -1)) d = await d.getDirectoryHandle(part); const f = await (await d.getFileHandle(parts.at(-1))).getFile(); IM[id] = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); }); delete URLC[id]; } catch(e){ console.warn('missing image', rel); }
+  }
+}
+async function applyInbox(name, msg){
+  const box = await dirHandle.getDirectoryHandle('claude-inbox');
+  const proj = msg.project; const map = proj.images || {}; delete proj.images;
+  await loadImagesFromMap(map);
+  const keepSel = selBlock; P = normalize(proj); selBlock = keepSel; undoStack = []; redoStack = []; lastSnap = JSON.stringify(P);
+  afterLoad(false); dirty = true; await folderSave(true);
+  try { await box.removeEntry(name); } catch(e){}
+  hideBanner('inbox'); inboxPending = null; toast(msg.note ? `Claudeの変更を反映しました：${msg.note}` : 'Claudeの変更を反映しました');
+}
+async function checkInbox(){
+  if (!folderReady || readOnly || inboxBusy || saving || DRAG || EDITING) return;
+  inboxBusy = true;
+  try {
+    let box; try { box = await dirHandle.getDirectoryHandle('claude-inbox'); } catch(e){ inboxBusy = false; return; }
+    const names = []; for await (const [n, h] of box.entries()){ if (h.kind === 'file' && n.endsWith('.json')) names.push(n); }
+    names.sort(); const name = names[0];
+    if (name && inboxPending !== name){
+      const msg = JSON.parse(await (await (await box.getFileHandle(name)).getFile()).text());
+      if (dirty) await folderSave();
+      if (lastText !== null && msg.base && msg.base !== fnv(lastText)){
+        inboxPending = name;
+        showBanner('inbox', 'Claudeからの変更が届きましたが、その後にこちらでも編集されています。', [['Claudeの変更を反映', 'inboxApply'], ['取り消す', 'inboxDiscard']]);
+      } else await applyInbox(name, msg);
+    }
+  } catch(e){ console.warn(e); }
+  inboxBusy = false;
+}
 async function checkRemote(){
   if (!folderReady || saving || DRAG || EDITING || document.hidden) return;
   try {
@@ -564,6 +600,8 @@ function showConflict(){ if (bannerKind === 'conflict') return; showBanner('conf
 $('#banner').addEventListener('click', async e => {
   const a = e.target.closest('[data-ban]')?.dataset.ban; if (!a) return;
   if (a === 'loadRemote'){ dirty = false; hideBanner(); await loadFromDir(dirHandle, {silent:true}); toast('読み込みました'); }
+  if (a === 'inboxApply' && inboxPending){ const box = await dirHandle.getDirectoryHandle('claude-inbox'); const msg = JSON.parse(await (await (await box.getFileHandle(inboxPending)).getFile()).text()); await applyInbox(inboxPending, msg); return; }
+  if (a === 'inboxDiscard' && inboxPending){ try { const box = await dirHandle.getDirectoryHandle('claude-inbox'); await box.removeEntry(inboxPending); } catch(e){} inboxPending = null; hideBanner('inbox'); toast('Claudeの変更を取り消しました'); return; }
   if (a === 'takeLock'){ await heartbeat(true); await loadFromDir(dirHandle, {silent:true}); toast('このウィンドウで編集できるようにしました'); return; }
   if (a === 'overwrite'){ hideBanner(); await folderSave(true); toast('こちらの内容で保存しました'); }
   if (a === 'doUpdate'){
@@ -573,7 +611,7 @@ $('#banner').addEventListener('click', async e => {
     location.reload();
   }
 });
-setInterval(() => { heartbeat(); checkRemote(); checkUpdate(); }, 3000);
+setInterval(() => { heartbeat(); checkInbox(); checkRemote(); checkUpdate(); }, 3000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ lastUpdCheck = 0; checkRemote(); checkUpdate(); } });
 window.addEventListener('beforeunload', e => { if (dirty && folderReady){ folderSave(); e.preventDefault(); e.returnValue = ''; } });
 // ---------- startup gate ----------
