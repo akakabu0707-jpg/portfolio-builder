@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.9.0">
+<meta name="app-version" content="2.10.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -276,7 +276,7 @@ const THEME_NAMES = {dark:'ダーク', light:'ライト', steel:'スチール', 
 const LAYOUTS = {g6:{n:6,label:'6枚（2×3）'}, g4:{n:4,label:'4枚（2×2）'}, g3:{n:3,label:'3枚（大1＋小2）'}, g2:{n:2,label:'2枚（上下）'}, g1:{n:1,label:'1枚（全面）'}};
 const GOOGLE_FONTS = ['Archivo','Noto Sans JP','Noto Serif JP','JetBrains Mono','Zen Kaku Gothic New','Oswald','Inter'];
 const COLOR_TOKENS = [['accent','アクセント'],['ink','文字'],['muted','補助文字'],['bg','背景'],['panel','パネル'],['line','罫線'],['white','白'],['black','黒']];
-const TOKENS = [['name','氏名'],['kana','ふりがな'],['romaji','ローマ字'],['school','所属'],['email','連絡先'],['position','志望職種'],['tools','使用ツール'],['roles','肩書き'],['year','年'],['label','小見出し'],['page','ページ番号'],['total','総ページ数'],['works','作品数']];
+const TOKENS = [['catch','キャッチコピー'],['intro','自己紹介'],['name','氏名'],['kana','ふりがな'],['romaji','ローマ字'],['school','所属'],['email','連絡先'],['position','志望職種'],['tools','使用ツール'],['roles','肩書き'],['year','年'],['label','小見出し'],['page','ページ番号'],['total','総ページ数'],['works','作品数']];
 const SOFTWARE_DEFAULT = ['Blender','Maya','3ds Max','ZBrush','Substance 3D Painter','Substance 3D Designer','Marvelous Designer','Houdini','Cinema 4D','Unreal Engine','Unity','After Effects','Premiere Pro','DaVinci Resolve','Photoshop','Illustrator','Clip Studio Paint'];
 const ROLE_DEFAULT = ['企画・絵コンテ','モデリング','スカルプト','UV展開','テクスチャリング','マテリアル・シェーディング','リギング','アニメーション','エフェクト','ライティング','レンダリング','コンポジット','編集','音楽・サウンド'];
 const KINDS = ['ANIMATION','MODELING','STILL','PR MOVIE','CUTSCENE','MOTION GRAPHICS','VFX','GAME','ILLUSTRATION'];
@@ -348,6 +348,17 @@ function freeTemplate(kind){
     E('rect', 0, 714, 1123, 80, {name:'帯', rect:{fill:'bg', stroke:'', sw:0, radius:0}, opacity:0.85}),
     E('text', 48, 738, 800, 30, {name:'キャプション', text:T('[キャプション]', {size:15, weight:500})}),
     E('text', 875, 742, 200, 20, {name:'ページ番号', text:T('{page} / {total}', {font:'mono', size:12, weight:400, color:'muted', align:'right', ls:0.06})})]};
+  if (kind === 'profile') return {name:'プロフィール', bg:'bg', elements:[
+    E('image', 0, 0, 470, 794, {name:'写真', image:{src:'', fit:'cover', px:50, py:30, radius:0, gray:false}}),
+    E('text', 530, 56, 545, 20, {name:'見出し', text:T('PROFILE', {font:'mono', size:12, weight:500, color:'accent', ls:0.2})}),
+    E('text', 530, 92, 545, 170, {name:'キャッチコピー', text:T('{catch}', {font:'heading', size:46, weight:900, lh:1.25})}),
+    E('text', 530, 292, 545, 40, {name:'氏名', text:T('{name}', {size:26, weight:700})}),
+    E('text', 530, 334, 545, 20, {name:'ローマ字', text:T('{romaji}', {font:'mono', size:12, weight:400, color:'muted', ls:0.06})}),
+    E('line', 530, 368, 545, 10, {name:'線', line:{color:'accent', sw:2}}),
+    E('text', 530, 394, 545, 50, {name:'所属・連絡先', text:T('{school}\n{email}', {size:13, weight:400, lh:1.7, color:'muted'})}),
+    E('text', 530, 462, 545, 230, {name:'自己紹介', text:T('{intro}', {size:14, weight:400, lh:1.85})}),
+    E('text', 530, 712, 545, 20, {name:'ツール', text:T('TOOLS　{tools}', {font:'mono', size:12, weight:400, color:'muted', ls:0.04})}),
+    E('text', 875, 742, 200, 20, {name:'ページ番号', text:T('{page} / {total}', {font:'mono', size:12, weight:400, color:'muted', align:'right', ls:0.06})})]};
   if (kind === 'text') return {name:'テキストページ', bg:'bg', elements:[
     E('text', 48, 44, 700, 50, {name:'見出し', text:T('ABOUT ME**.**', {font:'heading', size:40, weight:900, upper:true, lh:1.1})}),
     E('line', 48, 108, 1027, 10, {name:'線', line:{color:'line', sw:1}}),
@@ -365,7 +376,7 @@ function defaultProject(){
     settings:defaultSettings(),
     theme:{preset:'dark', ...THEMES.dark, headingFont:'Archivo', bodyFont:'Noto Sans JP', monoFont:'JetBrains Mono', expanded:true},
     profile:{coverLabel:'3DCG PORTFOLIO', year:String(new Date().getFullYear()), roles:'[志望職種など]',
-      name:'[氏名]', romaji:'[NAME IN ROMAJI]', kana:'[ふりがな]', school:'[大学名・学部・学科・学年]', email:'[メールアドレス]',
+      catch:'[キャッチコピー]', name:'[氏名]', romaji:'[NAME IN ROMAJI]', kana:'[ふりがな]', school:'[大学名・学部・学科・学年]', email:'[メールアドレス]',
       position:'[志望職種]', tools:'', toolList:[],
       intro:'[自己紹介を2〜3文で。3DCGを始めたきっかけ、得意なこと、挑戦したいこと]'},
     blocks:[
@@ -739,7 +750,7 @@ function resolveImg(s, M){ if (!s) return ''; const m = /^auto:hero:(\d+)$/.exec
 function autoPos(s, M){ const m = /^auto:hero:(\d+)$/.exec(s || ''); if (m){ const w = M.works[+m[1] - 1]; if (w) return [w.b.heroX, w.b.heroY]; } return null; }
 function fillTokens(s, pg, M){
   const pr = P.profile;
-  const map = {name:pr.name, kana:pr.kana, romaji:pr.romaji, school:pr.school, email:pr.email, position:pr.position, tools:profileTools(), roles:pr.roles, year:pr.year, label:pr.coverLabel, page:pad2(pg.n), total:pad2(M.total), works:String(M.works.length)};
+  const map = {name:pr.name, kana:pr.kana, romaji:pr.romaji, school:pr.school, email:pr.email, position:pr.position, tools:profileTools(), roles:pr.roles, catch:pr.catch || '', intro:pr.intro || '', year:pr.year, label:pr.coverLabel, page:pad2(pg.n), total:pad2(M.total), works:String(M.works.length)};
   return String(s ?? '').replace(/\{(\w+)\}/g, (m, k) => k in map ? map[k] : m);
 }
 
@@ -1310,6 +1321,7 @@ function panelProfile(){
   return `<div class="sec"><h3>基本情報</h3><div class="hint">ここで直すと、表紙やプロフィールページなど {name} を使っている全ての場所に反映されます。</div>
     ${fld(p + '.name', '氏名 {name}')}${fld(p + '.kana', 'ふりがな {kana}')}${fld(p + '.romaji', 'ローマ字 {romaji}')}${fld(p + '.school', '所属 {school}')}${fld(p + '.email', '連絡先 {email}')}
     ${fld(p + '.position', '志望職種 {position}')}<label class="f" style="margin-bottom:4px"><span>使用できるツール {tools}</span></label>${chips('profile.toolList', ST().software, P.profile.toolList, `<button class="chip add" data-addlist="settings.software" data-also="profile.toolList">＋ 追加</button>`)}${pv(profileTools())}${fld(p + '.roles', '肩書き {roles}（表紙用・改行できます）', {rows:3})}${fld(p + '.intro', '自己紹介', {rows:4})}</div>
+    <div class="sec"><h3>キャッチコピー</h3>${fld(p + '.catch', 'キャッチコピー {catch}（改行できます）', {rows:2, hint:'自由ページの「プロフィール」ひな形で大きく表示されます'})}</div>
     <div class="sec"><h3>その他</h3>${fld(p + '.coverLabel', '小見出し {label}（各ページ下にも出ます）')}${fld(p + '.year', '年 {year}')}</div>`;
 }
 function panelDesign(){
@@ -1489,7 +1501,7 @@ panel.addEventListener('click', async e => {
 function openFreeMenu(btn){
   closeMenu(); const r = btn.getBoundingClientRect();
   const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu'; m.style.left = r.left + 'px'; m.style.top = (r.bottom + 4) + 'px';
-  m.innerHTML = [['blank','白紙','何もないページ'],['section','セクション扉','大見出しで章を区切る'],['full','全面画像','1枚の画像を大きく見せる'],['text','テキストページ','自己PRや制作の考え方など']].map(([k, l, s]) => `<button data-free="${k}">${l}<small>${s}</small></button>`).join('');
+  m.innerHTML = [['profile','プロフィール','写真とキャッチコピーで自己紹介'],['blank','白紙','何もないページ'],['section','セクション扉','大見出しで章を区切る'],['full','全面画像','1枚の画像を大きく見せる'],['text','テキストページ','自己PRや制作の考え方など']].map(([k, l, s]) => `<button data-free="${k}">${l}<small>${s}</small></button>`).join('');
   document.body.appendChild(m);
   m.addEventListener('click', e => { const b = e.target.closest('[data-free]'); if (!b) return; const t = freeTemplate(b.dataset.free); P.blocks.splice(selBlock + 1, 0, {id:uid('b'), type:'free', enabled:true, ...t}); selBlock++; closeMenu(); changed(true); scrollToBlock(selBlock); });
   setTimeout(() => document.addEventListener('pointerdown', menuAway), 0);
