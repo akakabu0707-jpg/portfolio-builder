@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.10.0">
+<meta name="app-version" content="2.11.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -162,6 +162,23 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .grid.g3>:first-child{grid-column:1 / 3}
 .grid.g2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
 .grid.g1{grid-template-columns:1fr;grid-template-rows:1fr}
+.grid.h2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.grid.h3{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr}
+.grid.h4{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr}
+.grid.v3{grid-template-columns:1fr;grid-template-rows:repeat(3,1fr)}
+.grid.g3l{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.grid.g3l>:first-child{grid-row:1 / 3}
+.grid.g3r{grid-template-columns:1fr 2fr;grid-template-rows:1fr 1fr}
+.grid.g3r>:first-child{grid-row:1 / 3;grid-column:2}
+.grid.g3b{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.grid.g3b>:last-child{grid-column:1 / 3}
+.grid.g4l{grid-template-columns:2fr 1fr;grid-template-rows:repeat(3,1fr)}
+.grid.g4l>:first-child{grid-row:1 / 4}
+.grid.g4t{grid-template-columns:repeat(3,1fr);grid-template-rows:2fr 1fr}
+.grid.g4t>:first-child{grid-column:1 / 4}
+.grid.g6w{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr}
+.grid.g8{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr}
+.grid.g9{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}
 .cell{position:relative;overflow:hidden;background:#000;min-height:0}
 .cell>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cell .cap{position:absolute;left:8px;bottom:8px;padding:3px 8px;background:rgba(12,13,15,.85);color:#ECEAE4;font-family:var(--fm);font-size:12px}
@@ -273,7 +290,13 @@ const THEMES = {
   mono:{accent:'#FFFFFF', bg:'#000000', ink:'#F2F2F2', muted:'#9A9A9A', line:'#2B2B2B', panel:'#141414'}
 };
 const THEME_NAMES = {dark:'ダーク', light:'ライト', steel:'スチール', mono:'モノクロ'};
-const LAYOUTS = {g6:{n:6,label:'6枚（2×3）'}, g4:{n:4,label:'4枚（2×2）'}, g3:{n:3,label:'3枚（大1＋小2）'}, g2:{n:2,label:'2枚（上下）'}, g1:{n:1,label:'1枚（全面）'}};
+const LAYOUTS = {
+  g1:{n:1,label:'1枚（全面）'},
+  h2:{n:2,label:'2枚（左右）'}, g2:{n:2,label:'2枚（上下）'},
+  h3:{n:3,label:'3枚（横一列）'}, v3:{n:3,label:'3枚（縦一列）'}, g3:{n:3,label:'3枚（上に大1＋下に小2）'}, g3b:{n:3,label:'3枚（上に小2＋下に大1）'}, g3l:{n:3,label:'3枚（左に大1＋右に小2）'}, g3r:{n:3,label:'3枚（右に大1＋左に小2）'},
+  g4:{n:4,label:'4枚（2×2）'}, h4:{n:4,label:'4枚（横一列）'}, g4t:{n:4,label:'4枚（上に大1＋下に小3）'}, g4l:{n:4,label:'4枚（左に大1＋右に小3）'},
+  g6:{n:6,label:'6枚（2列×3段）'}, g6w:{n:6,label:'6枚（3列×2段）'},
+  g8:{n:8,label:'8枚（4列×2段）'}, g9:{n:9,label:'9枚（3×3）'}};
 const GOOGLE_FONTS = ['Archivo','Noto Sans JP','Noto Serif JP','JetBrains Mono','Zen Kaku Gothic New','Oswald','Inter'];
 const COLOR_TOKENS = [['accent','アクセント'],['ink','文字'],['muted','補助文字'],['bg','背景'],['panel','パネル'],['line','罫線'],['white','白'],['black','黒']];
 const TOKENS = [['catch','キャッチコピー'],['intro','自己紹介'],['name','氏名'],['kana','ふりがな'],['romaji','ローマ字'],['school','所属'],['email','連絡先'],['position','志望職種'],['tools','使用ツール'],['roles','肩書き'],['year','年'],['label','小見出し'],['page','ページ番号'],['total','総ページ数'],['works','作品数']];
@@ -1301,7 +1324,7 @@ function workEditor(w, bi, no){
         <div class="row" style="margin-bottom:8px"><label class="f grow" style="margin:0"><span>レイアウト</span><select data-path="${p}.details.${di}.layout" data-struct>${Object.entries(LAYOUTS).map(([k, l]) => `<option value="${k}" ${d.layout === k ? 'selected' : ''}>${l.label}</option>`).join('')}</select></label>
         <label class="f grow" style="margin:0"><span>右上の見出し</span><input type="text" data-path="${p}.details.${di}.label" value="${esc(d.label || 'BREAKDOWN')}"></label></div>
         ${di > 0 ? fld(`${p}.details.${di}.note`, '左側のメモ（空なら画像が全幅）', {rows:2}) : ''}
-        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"><div class="row" style="gap:4px">${[['cover', '枠いっぱい'], ['contain', '全体を表示']].map(([v, l]) => `<button class="chip ${(c.fit || 'cover') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.fit" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div></div>`; }).join('')}</div></div>`).join('')}
+        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"><div class="row" style="gap:4px"><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="-1" title="前の画像と入れ替え" ${k === 0 ? 'disabled' : ''}>◀</button><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="1" title="次の画像と入れ替え" ${k === (LAYOUTS[d.layout] || LAYOUTS.g6).n - 1 ? 'disabled' : ''}>▶</button>${[['cover', '枠いっぱい'], ['contain', '全体を表示']].map(([v, l]) => `<button class="chip ${(c.fit || 'cover') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.fit" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div></div>`; }).join('')}</div></div>`).join('')}
       <button class="b sm" data-act="dAdd">＋ 詳細ページを追加</button></div>
     <div class="sec row wrap"><button class="b sm" data-act="dupBlock">この作品を複製</button><button class="b sm danger" data-act="delBlock">この作品を削除</button></div>`;
 }
@@ -1482,6 +1505,7 @@ panel.addEventListener('click', async e => {
     case 'extraDel': cur.info.extra.splice(+b.dataset.mi, 1); break;
     case 'dAdd': cur.details.push({layout:'g4', label:'BREAKDOWN', note:'', extras:[], cells:Array.from({length:4}, () => ({img:'', cap:''}))}); break;
     case 'dDel': if (!confirm('この詳細ページを削除しますか？')) return; cur.details.splice(+b.dataset.di, 1); SEL = {ctx:null, ids:[]}; break;
+    case 'cellMv': { const cs = cur.details[+b.dataset.di].cells, k = +b.dataset.k, j = k + +b.dataset.dir; if (j < 0) return; while (cs.length <= Math.max(k, j)) cs.push({img:'', cap:''}); [cs[k], cs[j]] = [cs[j], cs[k]]; break; }
     case 'dUp': mv(cur.details, +b.dataset.di, +b.dataset.di - 1); SEL = {ctx:null, ids:[]}; break;
     case 'dDown': mv(cur.details, +b.dataset.di, +b.dataset.di + 1); SEL = {ctx:null, ids:[]}; break;
     case 'theme': Object.assign(P.theme, THEMES[b.dataset.k], {preset:b.dataset.k}); break;
