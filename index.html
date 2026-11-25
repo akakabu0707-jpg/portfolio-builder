@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.11.0">
+<meta name="app-version" content="2.12.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -133,6 +133,8 @@ kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ui-pa
 .el-text[contenteditable]{cursor:text;outline:1.5px dashed var(--sel);outline-offset:2px}
 .el-image img{width:100%;height:100%;display:block}
 .el .empty{width:100%;height:100%}
+.el .clipw{position:absolute;inset:0;overflow:hidden}
+.el .clipw>img{width:100%;height:100%;display:block}
 .el-line>i{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:block}
 .pad{padding:44px 48px;justify-content:space-between}
 .foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--fm);font-size:12px;color:var(--muted);letter-spacing:.06em}
@@ -387,6 +389,23 @@ function freeTemplate(kind){
     E('line', 48, 108, 1027, 10, {name:'線', line:{color:'line', sw:1}}),
     E('text', 48, 140, 620, 520, {name:'本文', text:T('[ここに文章]', {size:15, weight:400, lh:1.8})}),
     E('text', 875, 742, 200, 20, {name:'ページ番号', text:T('{page} / {total}', {font:'mono', size:12, weight:400, color:'muted', align:'right', ls:0.06})})]};
+  if (kind === 'coverSlant'){
+    const I = (src, x, y, w, h, sl, name, px, py) => E('image', x, y, w, h, {name, image:{src, fit:'cover', px:px ?? 50, py:py ?? 50, radius:0, gray:false, zoom:100, ...sl}});
+    return {name:'表紙', bg:'bg', elements:[
+      I('auto:hero:1', 500, 0, 623, 490, {sT:0, sB:-140, sL:155, sR:0}, '画像（右上）'),
+      I('auto:hero:2', 292, 418, 581, 376, {sT:-118, sB:0, sL:84, sR:110}, '画像（左下）'),
+      I('auto:hero:3', 766, 359, 357, 435, {sT:-54, sB:0, sL:114, sR:0}, '画像（右下）'),
+      E('rect', 40, 0, 1, 794, {name:'縦線', rect:{fill:'line', stroke:'', sw:0, radius:0}}),
+      E('text', 60, 52, 200, 20, {name:'ラベル', text:T('3DCG PORTFOLIO', {font:'mono', size:12, weight:500, ls:0.3})}),
+      E('rect', 210, 60, 290, 1, {name:'ラベルの線', rect:{fill:'muted', stroke:'', sw:0, radius:0}}),
+      E('text', 512, 52, 80, 20, {name:'年', text:T('2026', {font:'mono', size:12, weight:500, ls:0.3})}),
+      E('text', 60, 262, 620, 110, {name:'タイトル', text:T('PORTFOLIO**.**', {font:'heading', size:92, weight:900, lh:1, ls:-0.02})}),
+      E('text', 60, 386, 400, 40, {name:'氏名', text:T('{name}', {size:28, weight:700, lh:1.3})}),
+      E('text', 60, 428, 400, 20, {name:'ローマ字', text:T('{romaji}', {font:'mono', size:13, weight:400, color:'muted', ls:0.12})}),
+      E('rect', 40, 494, 40, 2, {name:'アクセント線', rect:{fill:'accent', stroke:'', sw:0, radius:0}}),
+      E('text', 96, 484, 380, 40, {name:'担当領域', text:T('3DCG / ANIMATION / CINEMATICS\nMODELING / LIGHTING / RENDERING', {font:'mono', size:10, weight:500, lh:1.7, ls:0.12})}),
+      E('rect', 40, 690, 10, 64, {name:'アクセント', rect:{fill:'accent', stroke:'', sw:0, radius:0}})]};
+  }
   return {name:'白紙ページ', bg:'bg', elements:[]};
 }
 function newWork(){ return {id:uid('w'), type:'work', enabled:true, title:'New Work', subtitle:'[サブタイトル]', tags:'', hero:'', heroX:50, heroY:50, heroExtras:[],
@@ -459,7 +478,7 @@ function migrateInfo(b, settings){
 function fixEl(e){
   const base = {id:e.id || uid('e'), rot:0, opacity:1, locked:false, hidden:false, ...e};
   if (base.type === 'text') base.text = T('', base.text);
-  if (base.type === 'image') base.image = {src:'', fit:'cover', px:50, py:50, radius:0, gray:false, ...(base.image || {})};
+  if (base.type === 'image') base.image = {src:'', fit:'cover', px:50, py:50, radius:0, gray:false, zoom:100, sT:0, sB:0, sL:0, sR:0, ...(base.image || {})};
   if (base.type === 'rect') base.rect = {fill:'accent', stroke:'', sw:0, radius:0, ...(base.rect || {})};
   if (base.type === 'line') base.line = {color:'accent', sw:2, ...(base.line || {})};
   return base;
@@ -787,6 +806,14 @@ function fontCSS(t){
   return `font-family:${fontStack(t.font, 'var(--fb)')};`;
 }
 function elBoxStyle(e){ return `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;${e.rot ? `transform:rotate(${e.rot}deg);` : ''}${e.opacity != null && e.opacity < 1 ? `opacity:${e.opacity};` : ''}`; }
+// slanted-edge clipping for image elements (px offsets per edge)
+function clipCSS(e){
+  const im = e.image, w = e.w, h = e.h, sT = +im.sT || 0, sB = +im.sB || 0, sL = +im.sL || 0, sR = +im.sR || 0;
+  if (!sT && !sB && !sL && !sR) return '';
+  const P2 = (x, y) => `${Math.round(x * 10) / 10}px ${Math.round(y * 10) / 10}px`;
+  const pts = [P2(Math.max(0, sL), Math.max(0, -sT)), P2(w - Math.max(0, -sR), Math.max(0, sT)), P2(w - Math.max(0, sR), h - Math.max(0, -sB)), P2(Math.max(0, -sL), h - Math.max(0, sB))];
+  return `clip-path:polygon(${pts.join(',')});`;
+}
 function elHTML(e, pg, M, ctx, idx){
   if (e.hidden) return '';
   const base = `class="el el-${e.type}${e.locked ? ' locked' : ''}" data-eid="${e.id}" data-ctx="${ctx}" style="${elBoxStyle(e)}z-index:${idx + 1};`;
@@ -798,9 +825,10 @@ function elHTML(e, pg, M, ctx, idx){
   if (e.type === 'image'){
     const im = e.image, id = resolveImg(im.src, M); const ap = autoPos(im.src, M);
     const pos = ap && im.px === 50 && im.py === 50 ? ap : [im.px, im.py];
+    const clip = clipCSS(e), z = +im.zoom || 100;
     const inner = id && IM[id]
-      ? `<img src="${src(id)}" alt="" draggable="false" style="object-fit:${im.fit};object-position:${pos[0]}% ${pos[1]}%;border-radius:${im.radius}px;${im.gray ? 'filter:grayscale(1);' : ''}">`
-      : `<div class="empty" style="border-radius:${im.radius}px"><b>[${esc(e.name || '画像')}]</b><span>${im.src && im.src.startsWith('auto:') ? '対応する作品がありません' : '画像をドロップ / ダブルクリック'}</span></div>`;
+      ? `<div class="clipw" style="${clip}border-radius:${im.radius}px"><img src="${src(id)}" alt="" draggable="false" style="object-fit:${im.fit};object-position:${pos[0]}% ${pos[1]}%;${z !== 100 ? `transform:scale(${z / 100});transform-origin:${pos[0]}% ${pos[1]}%;` : ''}${im.gray ? 'filter:grayscale(1);' : ''}"></div>`
+      : `<div class="empty" style="${clip}border-radius:${im.radius}px"><b>[${esc(e.name || '画像')}]</b><span>${im.src && im.src.startsWith('auto:') ? '対応する作品がありません' : '画像をドロップ / ダブルクリック'}</span></div>`;
     return `<div ${base}">${inner}</div>`;
   }
   if (e.type === 'rect'){ const r = e.rect; return `<div ${base}background:${col(r.fill)};${r.sw ? `border:${r.sw}px solid ${col(r.stroke || 'ink')};` : ''}border-radius:${r.radius}px"></div>`; }
@@ -1179,6 +1207,11 @@ function renderInsp(){
       <div class="row" style="margin-bottom:8px">${[['cover','枠いっぱい'],['contain','全体を表示']].map(([k, l]) => `<button class="b sm ${im.fit === k ? 'on' : ''}" data-set="${q}.fit" data-val="${k}">${l}</button>`).join('')}<button class="b sm ${im.gray ? 'on' : ''}" data-tog="${q}.gray">白黒</button></div>
       <label class="f"><span>表示位置 左右 ${im.px}%</span><input type="range" min="0" max="100" data-path="${q}.px" data-num value="${im.px}"></label>
       <label class="f"><span>表示位置 上下 ${im.py}%</span><input type="range" min="0" max="100" data-path="${q}.py" data-num value="${im.py}"></label>
+      <label class="f"><span>拡大 ${+im.zoom || 100}%</span><input type="range" min="100" max="300" step="5" data-path="${q}.zoom" data-num value="${+im.zoom || 100}"></label>
+      <div class="sec" style="padding:8px 0 0;border:0"><h3 style="margin-bottom:4px">斜めカット</h3>
+        <div class="hint">各辺をどれだけ傾けるか（px）。マイナスで逆向き。表紙の斜めレイアウトなどに使います。</div>
+        <div class="g4">${num(q + '.sT', +im.sT || 0, '上辺')}${num(q + '.sB', +im.sB || 0, '下辺')}${num(q + '.sL', +im.sL || 0, '左辺')}${num(q + '.sR', +im.sR || 0, '右辺')}</div>
+        <div class="row" style="margin-top:6px;gap:4px;flex-wrap:wrap"><button class="b sm" data-slant="${q}" data-v="0,0,0,0">四角に戻す</button><button class="b sm" data-slant="${q}" data-v="0,0,${Math.round(e.h * 0.25)},${Math.round(e.h * 0.25)}">平行四辺形</button><button class="b sm" data-slant="${q}" data-v="0,0,${Math.round(e.h * 0.25)},0">左だけ斜め</button><button class="b sm" data-slant="${q}" data-v="0,0,0,${Math.round(e.h * 0.25)}">右だけ斜め</button></div></div>
       <div class="g2">${num(q + '.radius', im.radius, '角丸 px')}<label><span class="mini">名前（空の時に表示）</span><input type="text" data-path="${p}.name" value="${esc(e.name || '')}"></label></div></div>`;
   }
   if (e.type === 'rect'){ const r = e.rect, q = `${p}.rect`;
@@ -1477,6 +1510,7 @@ panel.addEventListener('click', async e => {
   const ch = e.target.closest('[data-chip]'); if (ch){ const arr = getPath(ch.dataset.chip) || []; const v = ch.dataset.val; setPath(ch.dataset.chip, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
   const ci = e.target.closest('[data-chipinv]'); if (ci){ const arr = getPath(ci.dataset.chipinv) || []; const v = ci.dataset.val; setPath(ci.dataset.chipinv, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]); return changed(true); }
   const stg = e.target.closest('[data-settog]'); if (stg){ setPath(stg.dataset.settog, stg.dataset.val === 'true'); return changed(true); }
+  const sl = e.target.closest('[data-slant]'); if (sl){ const [a, b2, c, d2] = sl.dataset.v.split(',').map(Number); setPath(sl.dataset.slant + '.sT', a); setPath(sl.dataset.slant + '.sB', b2); setPath(sl.dataset.slant + '.sL', c); setPath(sl.dataset.slant + '.sR', d2); return changed(true); }
   const sv = e.target.closest('[data-setv]'); if (sv){ setPath(sv.dataset.setv, sv.dataset.val); return changed(true); }
   const mvb = e.target.closest('[data-mv]'); if (mvb){ const arr = getPath(mvb.dataset.mv); const i0 = +mvb.dataset.idx, i1 = i0 + (+mvb.dataset.dir); if (i1 >= 0 && i1 < arr.length){ [arr[i0], arr[i1]] = [arr[i1], arr[i0]]; changed(true); } return; }
   const rmb = e.target.closest('[data-rm]'); if (rmb){ const arr = getPath(rmb.dataset.rm); const v = arr[+rmb.dataset.idx]; if (!confirm(`「${v}」を一覧から削除しますか？（作品で選んでいる場合はそこからも外れます）`)) return; arr.splice(+rmb.dataset.idx, 1);
@@ -1525,7 +1559,7 @@ panel.addEventListener('click', async e => {
 function openFreeMenu(btn){
   closeMenu(); const r = btn.getBoundingClientRect();
   const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu'; m.style.left = r.left + 'px'; m.style.top = (r.bottom + 4) + 'px';
-  m.innerHTML = [['profile','プロフィール','写真とキャッチコピーで自己紹介'],['blank','白紙','何もないページ'],['section','セクション扉','大見出しで章を区切る'],['full','全面画像','1枚の画像を大きく見せる'],['text','テキストページ','自己PRや制作の考え方など']].map(([k, l, s]) => `<button data-free="${k}">${l}<small>${s}</small></button>`).join('');
+  m.innerHTML = [['coverSlant','表紙（斜めカット）','作品画像を斜めに切って並べる表紙'],['profile','プロフィール','写真とキャッチコピーで自己紹介'],['blank','白紙','何もないページ'],['section','セクション扉','大見出しで章を区切る'],['full','全面画像','1枚の画像を大きく見せる'],['text','テキストページ','自己PRや制作の考え方など']].map(([k, l, s]) => `<button data-free="${k}">${l}<small>${s}</small></button>`).join('');
   document.body.appendChild(m);
   m.addEventListener('click', e => { const b = e.target.closest('[data-free]'); if (!b) return; const t = freeTemplate(b.dataset.free); P.blocks.splice(selBlock + 1, 0, {id:uid('b'), type:'free', enabled:true, ...t}); selBlock++; closeMenu(); changed(true); scrollToBlock(selBlock); });
   setTimeout(() => document.addEventListener('pointerdown', menuAway), 0);
