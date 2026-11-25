@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.13.0">
+<meta name="app-version" content="2.14.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1114,12 +1114,45 @@ function reorder(mode){
   else { out = arr.slice(); const step = mode === 'up' ? 1 : -1; const idxs = out.map((e, i) => ids.includes(e.id) ? i : -1).filter(i => i >= 0); if (step > 0) idxs.reverse(); idxs.forEach(i => { const j = i + step; if (j >= 0 && j < out.length && !ids.includes(out[j].id)) [out[i], out[j]] = [out[j], out[i]]; }); }
   arr.length = 0; arr.push(...out); changed(true);
 }
+// visible (ink) bounds of an element in page px. Text is measured glyph by glyph,
+// so alignment ignores the text box, alignment padding, spaces and side bearings.
+const STRETCH_KW = [[50,'ultra-condensed'],[62.5,'extra-condensed'],[75,'condensed'],[87.5,'semi-condensed'],[100,'normal'],[112.5,'semi-expanded'],[125,'expanded'],[150,'extra-expanded'],[200,'ultra-expanded']];
+let _mctx = null;
+function visBox(e){
+  const box = {x:e.x, y:e.y, w:e.w, h:e.h};
+  if (e.type !== 'text' || e.rot) return box;
+  const node = document.querySelector(`.el[data-eid="${e.id}"]`); if (!node) return box;
+  const layer = node.parentElement, lr = layer.getBoundingClientRect(), z = lr.width / (layer.offsetWidth || 1) || 1;
+  _mctx = _mctx || document.createElement('canvas').getContext('2d');
+  let L = Infinity, R = -Infinity, T = Infinity, B = -Infinity;
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let tn; const rg = document.createRange();
+  while ((tn = walker.nextNode())){
+    const st = getComputedStyle(tn.parentElement), up = st.textTransform === 'uppercase';
+    const pct = parseFloat(st.fontStretch) || 100; const kw = STRETCH_KW.reduce((a, b) => Math.abs(b[0] - pct) < Math.abs(a[0] - pct) ? b : a)[1];
+    _mctx.font = `${st.fontStyle} ${st.fontWeight} ${st.fontSize} ${st.fontFamily}`; try { _mctx.fontStretch = kw; } catch(err){}
+    const txt = tn.textContent;
+    for (let i = 0; i < txt.length; i++){
+      const ch = txt[i]; if (/\s/.test(ch)) continue;
+      rg.setStart(tn, i); rg.setEnd(tn, i + 1); const r = rg.getClientRects()[0]; if (!r || !r.width) continue;
+      const m = _mctx.measureText(up ? ch.toUpperCase() : ch);
+      const base = r.top + (m.fontBoundingBoxAscent ?? m.actualBoundingBoxAscent) * z;
+      L = Math.min(L, r.left - m.actualBoundingBoxLeft * z); R = Math.max(R, r.left + m.actualBoundingBoxRight * z);
+      T = Math.min(T, base - m.actualBoundingBoxAscent * z); B = Math.max(B, base + m.actualBoundingBoxDescent * z);
+    }
+  }
+  if (!isFinite(L)) return box;
+  return {x:(L - lr.left) / z, y:(T - lr.top) / z, w:(R - L) / z, h:(B - T) / z};
+}
 function align(mode){
   const els = selEls().filter(e => !e.locked); if (!els.length) return;
-  const ref = els.length > 1 ? bbox(els) : {x:0, y:0, w:PW, h:PH};
-  els.forEach(e => {
-    if (mode === 'l') e.x = ref.x; if (mode === 'c') e.x = Math.round(ref.x + ref.w / 2 - e.w / 2); if (mode === 'r') e.x = ref.x + ref.w - e.w;
-    if (mode === 't') e.y = ref.y; if (mode === 'm') e.y = Math.round(ref.y + ref.h / 2 - e.h / 2); if (mode === 'b') e.y = ref.y + ref.h - e.h;
+  const vb = new Map(els.map(e => [e, visBox(e)]));
+  let ref;
+  if (els.length > 1){ const xs = [...vb.values()]; const x = Math.min(...xs.map(b => b.x)), y = Math.min(...xs.map(b => b.y)); ref = {x, y, w:Math.max(...xs.map(b => b.x + b.w)) - x, h:Math.max(...xs.map(b => b.y + b.h)) - y}; }
+  else ref = {x:0, y:0, w:PW, h:PH};
+  els.forEach(e => { const b = vb.get(e), ox = b.x - e.x, oy = b.y - e.y; let nx = b.x, ny = b.y;
+    if (mode === 'l') nx = ref.x; if (mode === 'c') nx = ref.x + ref.w / 2 - b.w / 2; if (mode === 'r') nx = ref.x + ref.w - b.w;
+    if (mode === 't') ny = ref.y; if (mode === 'm') ny = ref.y + ref.h / 2 - b.h / 2; if (mode === 'b') ny = ref.y + ref.h - b.h;
+    if ('lcr'.includes(mode)) e.x = Math.round((nx - ox) * 10) / 10; else e.y = Math.round((ny - oy) * 10) / 10;
   });
   changed(true);
 }
