@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2.12.0">
+<meta name="app-version" content="2.13.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0D0F">
 <link rel="manifest" href="manifest.webmanifest">
@@ -890,7 +890,7 @@ function renderDetail(pg, M){
     const inner = c.img && IM[c.img]
       ? `<div class="cell ${fit === 'contain' ? 'contain' : ''}"><img src="${src(c.img)}" alt="" draggable="false" data-drop="${cp}" style="object-fit:${fit}">${mode === 'overlay' && c.cap ? `<span class="cap">${rich(c.cap)}</span>` : ''}</div>`
       : `<div class="cell" style="background:none">${slot('', cp, c.cap || '画像', 'ここに画像をドロップ')}</div>`;
-    cells.push(mode === 'below' ? `<div class="cw">${inner}<span class="capb">${c.cap && c.img && IM[c.img] ? rich(c.cap) : '&nbsp;'}</span></div>` : inner);
+    cells.push(mode === 'below' ? `<div class="cw">${inner}<span class="capb" data-ca="${c.capAlign || 'auto'}" data-fit="${fit}">${c.cap && c.img && IM[c.img] ? rich(c.cap) : '&nbsp;'}</span></div>` : inner);
   }
   const parts = {
     desc:() => w.desc ? `<p class="desc">${richBr(w.desc)}</p>` : '',
@@ -928,7 +928,7 @@ function doRenderPages(){
   }).join('');
   drawSelection();
   if (EDITING){ const el = document.querySelector(`.el[data-eid="${EDITING}"]`); if (el && document.activeElement !== el){ el.focus(); placeCaretEnd(el); } }
-  checkOverflow(); updTodo(); updUndo();
+  checkOverflow(); fixCaps(); updTodo(); updUndo();
 }
 function fitZoom(){ const w = $('#stage').clientWidth - 60; return Math.max(0.2, Math.min(1, Math.floor(w / PW * 20) / 20)); }
 function getZoom(){ if (zoom == null){ zoom = fitZoom(); } $('#zoom').value = zoom; $('#zoomPct').textContent = Math.round(zoom * 100) + '%'; return zoom; }
@@ -1357,7 +1357,7 @@ function workEditor(w, bi, no){
         <div class="row" style="margin-bottom:8px"><label class="f grow" style="margin:0"><span>レイアウト</span><select data-path="${p}.details.${di}.layout" data-struct>${Object.entries(LAYOUTS).map(([k, l]) => `<option value="${k}" ${d.layout === k ? 'selected' : ''}>${l.label}</option>`).join('')}</select></label>
         <label class="f grow" style="margin:0"><span>右上の見出し</span><input type="text" data-path="${p}.details.${di}.label" value="${esc(d.label || 'BREAKDOWN')}"></label></div>
         ${di > 0 ? fld(`${p}.details.${di}.note`, '左側のメモ（空なら画像が全幅）', {rows:2}) : ''}
-        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"><div class="row" style="gap:4px"><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="-1" title="前の画像と入れ替え" ${k === 0 ? 'disabled' : ''}>◀</button><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="1" title="次の画像と入れ替え" ${k === (LAYOUTS[d.layout] || LAYOUTS.g6).n - 1 ? 'disabled' : ''}>▶</button>${[['cover', '枠いっぱい'], ['contain', '全体を表示']].map(([v, l]) => `<button class="chip ${(c.fit || 'cover') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.fit" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div></div>`; }).join('')}</div></div>`).join('')}
+        <div class="cells">${Array.from({length:(LAYOUTS[d.layout] || LAYOUTS.g6).n}, (_, k) => { if (!d.cells[k]) d.cells[k] = {img:'', cap:''}; const c = d.cells[k]; return `<div class="cellEd">${dropBox(`${p}.details.${di}.cells.${k}.img`, c.img, c.cap || '画像')}<input type="text" data-path="${p}.details.${di}.cells.${k}.cap" value="${esc(c.cap)}" placeholder="キャプション"><div class="row" style="gap:4px"><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="-1" title="前の画像と入れ替え" ${k === 0 ? 'disabled' : ''}>◀</button><button class="ib" data-act="cellMv" data-di="${di}" data-k="${k}" data-dir="1" title="次の画像と入れ替え" ${k === (LAYOUTS[d.layout] || LAYOUTS.g6).n - 1 ? 'disabled' : ''}>▶</button>${[['cover', '枠いっぱい'], ['contain', '全体を表示']].map(([v, l]) => `<button class="chip ${(c.fit || 'cover') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.fit" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div><div class="row" style="gap:4px;flex-wrap:wrap"><span class="mini" style="margin:0 2px 0 0">キャプション</span>${[['auto', '画像の左'], ['center', '画像の中央'], ['right', '画像の右'], ['left', '枠の左']].map(([v, l]) => `<button class="chip ${(c.capAlign || 'auto') === v ? 'on' : ''}" data-setv="${p}.details.${di}.cells.${k}.capAlign" data-val="${v}" style="font-size:11px;padding:2px 8px;min-height:22px">${l}</button>`).join('')}</div></div>`; }).join('')}</div></div>`).join('')}
       <button class="b sm" data-act="dAdd">＋ 詳細ページを追加</button></div>
     <div class="sec row wrap"><button class="b sm" data-act="dupBlock">この作品を複製</button><button class="b sm danger" data-act="delBlock">この作品を削除</button></div>`;
 }
@@ -1476,6 +1476,21 @@ function setStatus(){
 }
 let OVERFLOW = [];
 // text that runs past the footer (or off the page) on template pages
+// align below-captions to the visible image area (for "全体を表示" images)
+function fixCaps(root){
+  (root || document).querySelectorAll('.capb').forEach(cb => {
+    const ca = cb.dataset.ca || 'auto', cw = cb.parentElement, img = cw && cw.querySelector('.cell>img');
+    let off = 0, iw = null;
+    if (img && cb.dataset.fit === 'contain' && img.naturalWidth){
+      const cell = img.parentElement, W = cell.offsetWidth, H = cell.offsetHeight, sc = Math.min(W / img.naturalWidth, H / img.naturalHeight);
+      iw = img.naturalWidth * sc; off = Math.max(0, (W - iw) / 2);
+    }
+    const snap = ca !== 'left';
+    cb.style.textAlign = ca === 'center' || ca === 'right' ? ca : 'left';
+    cb.style.paddingLeft = cb.style.paddingRight = snap && off ? off + 'px' : '0px';
+  });
+}
+document.addEventListener('load', e => { if (e.target.tagName === 'IMG' && e.target.closest('.cw')) fixCaps(e.target.closest('.cw')); }, true);
 function checkOverflow(){
   OVERFLOW = [];
   document.querySelectorAll('.pbox').forEach((box, idx) => {
